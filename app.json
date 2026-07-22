@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "AquaQueen",
+    "slug": "aquaqueen",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aquaqueen.app",
+      "buildNumber": "1"
+    },
+    "android": {
+      "package": "com.aquaqueen.app",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow AquaQueen to use your location to tag your farm's location."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow AquaQueen to access your photos to set a farm photo."
+        }
+      ],
+      "expo-sharing",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#f4f7f7"
+        }
+      ],
+      "@sentry/react-native"
+    ]
+  }
+}
