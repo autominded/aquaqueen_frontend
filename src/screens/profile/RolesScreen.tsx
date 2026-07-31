@@ -7,13 +7,16 @@ import { fetchRoles } from "../../api/roles";
 import { LoadingView } from "../../components/LoadingView";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { Card } from "../../components/Card";
-import { PrimaryButton } from "../../components/PrimaryButton";
 import { apiErrorMessage } from "../../api/client";
+import { StatusPill } from "../../components/StatusPill";
+import { colors, radii } from "../../theme";
+import { useRefreshing } from "../../lib/useRefreshing";
 
 type Props = NativeStackScreenProps<ProfileStackParamList, "Roles">;
 
 export function RolesScreen({ navigation }: Props) {
-  const { data, isPending, isError, error, refetch, isRefetching } = useQuery({
+  const { refreshing, onRefresh } = useRefreshing();
+  const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: ["roles"],
     queryFn: fetchRoles,
   });
@@ -24,13 +27,16 @@ export function RolesScreen({ navigation }: Props) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <PrimaryButton title="+ New role" onPress={() => navigation.navigate("RoleForm", {})} />
+        <View><Text style={styles.eyebrow}>ACCESS</Text><Text style={styles.heading}>Roles</Text></View>
+        <TouchableOpacity style={styles.addButton} onPress={() => navigation.navigate("RoleForm", {})} accessibilityLabel="Create a new role">
+          <Text style={styles.addButtonText}>New role</Text>
+        </TouchableOpacity>
       </View>
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
-        refreshing={isRefetching}
-        onRefresh={refetch}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         renderItem={({ item }) => (
           <TouchableOpacity
             disabled={item.isSystem}
@@ -39,7 +45,7 @@ export function RolesScreen({ navigation }: Props) {
             <Card>
               <View style={styles.rowBetween}>
                 <Text style={styles.name}>{item.name}</Text>
-                {item.isSystem && <Text style={styles.protected}>Protected</Text>}
+                {item.isSystem && <StatusPill label="Protected" tone="neutral" />}
               </View>
               <Text style={styles.meta}>
                 {item.permissions.length} permission{item.permissions.length === 1 ? "" : "s"}
@@ -53,10 +59,13 @@ export function RolesScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f4f7f7" },
-  header: { padding: 16, paddingBottom: 4 },
+  container: { flex: 1, backgroundColor: colors.canvas },
+  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  eyebrow: { fontSize: 11, fontWeight: "800", letterSpacing: 1, color: colors.teal },
+  heading: { color: colors.ocean, fontSize: 26, fontWeight: "800", marginTop: 3 },
+  addButton: { backgroundColor: colors.teal, minHeight: 40, paddingHorizontal: 13, borderRadius: radii.sm, justifyContent: "center", alignItems: "center" },
+  addButtonText: { color: colors.white, fontSize: 13, fontWeight: "800" },
   rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  name: { fontSize: 15, fontWeight: "700", color: "#1c2424" },
-  protected: { fontSize: 12, fontWeight: "700", color: "#7a8787" },
-  meta: { fontSize: 13, color: "#7a8787", marginTop: 4 },
+  name: { fontSize: 15, fontWeight: "800", color: colors.ink },
+  meta: { fontSize: 13, color: colors.inkMuted, marginTop: 4 },
 });

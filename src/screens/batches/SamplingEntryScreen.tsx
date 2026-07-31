@@ -5,16 +5,19 @@ import { BatchesStackParamList } from "../../navigation/types";
 import { createSamplingEntry } from "../../api/batches";
 import { useEntrySubmit } from "./useEntrySubmit";
 import { FormField } from "../../components/FormField";
+import { DateField } from "../../components/DateField";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { apiErrorMessage } from "../../api/client";
+import { useUnits } from "../../context/UnitsContext";
 
 type Props = NativeStackScreenProps<BatchesStackParamList, "SamplingEntry">;
 
 export function SamplingEntryScreen({ route }: Props) {
-  const { batchId } = route.params;
+  const { batchId, racewayId } = route.params;
+  const { weightUnitLabel, fromDisplayWeight } = useUnits();
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
-  const [avgWeightG, setAvgWeightG] = useState("");
+  const [avgWeight, setAvgWeight] = useState("");
   const [sampleSize, setSampleSize] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -22,21 +25,23 @@ export function SamplingEntryScreen({ route }: Props) {
     () =>
       createSamplingEntry(batchId, {
         date,
-        avgWeightG: Number(avgWeightG),
+        avgWeightG: fromDisplayWeight(Number(avgWeight)),
         sampleSize: Number(sampleSize),
+        racewayId,
         notes: notes.trim() || undefined,
       }),
     batchId,
-    "sampling"
+    "sampling",
+    racewayId
   );
 
-  const canSubmit = date && Number(avgWeightG) > 0 && Number(sampleSize) > 0;
+  const canSubmit = date && Number(avgWeight) > 0 && Number(sampleSize) > 0;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {mutation.isError && <ErrorBanner message={apiErrorMessage(mutation.error)} />}
-      <FormField label="Date (YYYY-MM-DD)" value={date} onChangeText={setDate} />
-      <FormField label="Average weight (g)" value={avgWeightG} onChangeText={setAvgWeightG} keyboardType="numeric" placeholder="45.2" />
+      <DateField label="Date" value={date} onChange={setDate} />
+      <FormField label={`Average weight (${weightUnitLabel})`} value={avgWeight} onChangeText={setAvgWeight} keyboardType="numeric" placeholder="45.2" />
       <FormField label="Sample size" value={sampleSize} onChangeText={setSampleSize} keyboardType="numeric" placeholder="30" />
       <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} multiline placeholder="Any observations" />
       <PrimaryButton title="Save sampling entry" onPress={() => mutation.mutate()} loading={mutation.isPending} disabled={!canSubmit} />

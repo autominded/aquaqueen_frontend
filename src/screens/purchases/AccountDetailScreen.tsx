@@ -10,6 +10,8 @@ import { EmptyState } from "../../components/EmptyState";
 import { Card } from "../../components/Card";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { apiErrorMessage } from "../../api/client";
+import { RefreshableScrollView } from "../../components/RefreshableScrollView";
+import { useRefreshing } from "../../lib/useRefreshing";
 
 type Props = NativeStackScreenProps<PurchasesStackParamList, "AccountDetail">;
 
@@ -18,6 +20,7 @@ export function AccountDetailScreen({ route, navigation }: Props) {
   const queryClient = useQueryClient();
 
   const { data, isPending, isError, error, refetch } = useQuery({ queryKey: ["ledger"], queryFn: fetchLedger });
+  const { refreshing, onRefresh } = useRefreshing();
 
   const closeMutation = useMutation({
     mutationFn: () => closeAccount(accountId),
@@ -37,11 +40,11 @@ export function AccountDetailScreen({ route, navigation }: Props) {
   const transactions = data.transactions.filter((t) => t.accountId === accountId);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <RefreshableScrollView contentContainerStyle={styles.container} refreshing={refreshing} onRefresh={onRefresh}>
       <Card>
         <View style={styles.rowBetween}>
           <Text style={styles.name}>{account.name}</Text>
-          <Text style={[styles.balance, account.balance < 0 && styles.negative]}>${account.balance.toFixed(2)}</Text>
+          <Text style={[styles.balance, account.balance < 0 && styles.negative]}>₹{account.balance.toFixed(2)}</Text>
         </View>
         <Text style={styles.meta}>{account.type === "CASH" ? "Cash" : "Bank"}{account.isClosed ? " · Closed" : ""}</Text>
       </Card>
@@ -81,13 +84,13 @@ export function AccountDetailScreen({ route, navigation }: Props) {
           <View style={styles.rowBetween}>
             <Text style={styles.description}>{t.description}</Text>
             <Text style={[styles.amount, t.type === "CREDIT" ? styles.positive : styles.negative]}>
-              {t.type === "CREDIT" ? "+" : "−"}${t.amount.toFixed(2)}
+              {t.type === "CREDIT" ? "+" : "−"}₹{t.amount.toFixed(2)}
             </Text>
           </View>
           <Text style={styles.meta}>{new Date(t.operationDate).toDateString()}</Text>
         </Card>
       ))}
-    </ScrollView>
+    </RefreshableScrollView>
   );
 }
 

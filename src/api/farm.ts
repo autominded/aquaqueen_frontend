@@ -6,10 +6,25 @@ export function fetchFarm() {
 }
 
 export interface RacewayDraft {
+  // Present for a raceway that already exists on the farm — lets the save
+  // update it in place instead of the server recreating it with a new id,
+  // which would orphan any RacewayStocking/log entries pointing at it.
+  id?: string;
   name: string;
   lengthM: string;
   widthM: string;
   depthM: string;
+}
+
+export interface FarmFileDraft {
+  uri: string;
+  name: string;
+  type: string;
+  // Web only: the real File/Blob. FormData on web needs an actual Blob to
+  // attach a file — the { uri, name, type } descriptor only works with React
+  // Native's own multipart handling on native platforms, not the browser's.
+  // Same fix as ReceiptPicker/uploadPurchaseReceipt.
+  file?: File;
 }
 
 export interface SaveFarmInput {
@@ -19,9 +34,20 @@ export interface SaveFarmInput {
   address?: string;
   registrationNumber?: string;
   raceways: RacewayDraft[];
-  photo?: { uri: string; name: string; type: string };
-  identityProof?: { uri: string; name: string; type: string };
-  registrationDoc?: { uri: string; name: string; type: string };
+  photo?: FarmFileDraft;
+  logo?: FarmFileDraft;
+  identityProof?: FarmFileDraft;
+  registrationDoc?: FarmFileDraft;
+}
+
+function appendFile(form: FormData, field: string, file: FarmFileDraft) {
+  if (file.file) {
+    form.append(field, file.file, file.name);
+  } else {
+    // React Native's FormData accepts a { uri, name, type } file descriptor
+    // here, which the DOM-oriented FormData typings don't model.
+    form.append(field, file as unknown as Blob);
+  }
 }
 
 export function saveFarm(input: SaveFarmInput) {
@@ -35,6 +61,7 @@ export function saveFarm(input: SaveFarmInput) {
     "raceways",
     JSON.stringify(
       input.raceways.map((r) => ({
+        id: r.id,
         name: r.name,
         lengthM: Number(r.lengthM),
         widthM: Number(r.widthM),
@@ -42,11 +69,10 @@ export function saveFarm(input: SaveFarmInput) {
       }))
     )
   );
-  // React Native's FormData accepts a { uri, name, type } file descriptor here,
-  // which the DOM-oriented FormData typings don't model.
-  if (input.photo) form.append("photo", input.photo as unknown as Blob);
-  if (input.identityProof) form.append("identityProof", input.identityProof as unknown as Blob);
-  if (input.registrationDoc) form.append("registrationDoc", input.registrationDoc as unknown as Blob);
+  if (input.photo) appendFile(form, "photo", input.photo);
+  if (input.logo) appendFile(form, "logo", input.logo);
+  if (input.identityProof) appendFile(form, "identityProof", input.identityProof);
+  if (input.registrationDoc) appendFile(form, "registrationDoc", input.registrationDoc);
 
   return apiClient
     .put<{ farm: Farm }>("/farm", form, { headers: { "Content-Type": "multipart/form-data" } })

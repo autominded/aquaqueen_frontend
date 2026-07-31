@@ -8,6 +8,8 @@ import { PrimaryButton } from "../../components/PrimaryButton";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { apiErrorMessage } from "../../api/client";
 import * as otpAuth from "../../lib/otpAuth";
+import { AuthShell } from "../../components/AuthShell";
+import { colors } from "../../theme";
 
 type Props = NativeStackScreenProps<AuthStackParamList, "VerifyOtp">;
 
@@ -38,8 +40,7 @@ export function VerifyOtpScreen({ route }: Props) {
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Verify your phone</Text>
-        <Text style={styles.subtitle}>We sent a 6-digit code to {phone}</Text>
+        <AuthShell eyebrow="SECURE SETUP" title="Verify your phone." subtitle={`We sent a six-digit code to ${phone}.`}>
 
         {error && <ErrorBanner message={error} />}
 
@@ -49,17 +50,17 @@ export function VerifyOtpScreen({ route }: Props) {
           onChangeText={setCode}
           keyboardType="number-pad"
           placeholder="123456"
+          returnKeyType="go"
+          onSubmitEditing={onSubmit}
         />
 
-        <PrimaryButton title="Verify & create account" onPress={onSubmit} loading={loading} />
+          <PrimaryButton title="Verify & create account" onPress={onSubmit} loading={loading} />
+        </AuthShell>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: "#f4f7f7" },
-  container: { flexGrow: 1, justifyContent: "center", padding: 24 },
-  title: { fontSize: 26, fontWeight: "800", color: "#0b6e6e", textAlign: "center" },
-  subtitle: { fontSize: 15, color: "#5c6b6b", textAlign: "center", marginBottom: 32, marginTop: 4 },
+  flex: { flex: 1, backgroundColor: colors.ocean }, container: { flexGrow: 1 },
 });

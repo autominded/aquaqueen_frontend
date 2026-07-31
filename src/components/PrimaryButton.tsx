@@ -1,32 +1,34 @@
 import React from "react";
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, ViewStyle } from "react-native";
+import { colors, radii } from "../theme";
 
 interface Props {
   title: string;
   onPress: () => void;
   loading?: boolean;
   disabled?: boolean;
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "ghost";
   style?: ViewStyle;
 }
 
 export function PrimaryButton({ title, onPress, loading, disabled, variant = "primary", style }: Props) {
   const isSecondary = variant === "secondary";
+  const isGhost = variant === "ghost";
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled || loading}
       style={[
         styles.button,
-        isSecondary ? styles.secondary : styles.primary,
+        isSecondary ? styles.secondary : isGhost ? styles.ghost : styles.primary,
         (disabled || loading) && styles.disabled,
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={isSecondary ? "#0b6e6e" : "white"} />
+        <ActivityIndicator color={isSecondary || isGhost ? colors.teal : colors.white} />
       ) : (
-        <Text style={isSecondary ? styles.secondaryText : styles.primaryText}>{title}</Text>
+        <Text style={isSecondary || isGhost ? styles.secondaryText : styles.primaryText}>{title}</Text>
       )}
     </TouchableOpacity>
   );
@@ -34,14 +36,17 @@ export function PrimaryButton({ title, onPress, loading, disabled, variant = "pr
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 8,
-    paddingVertical: 13,
+    minHeight: 48,
+    borderRadius: radii.sm,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     alignItems: "center",
     justifyContent: "center",
   },
-  primary: { backgroundColor: "#0b6e6e" },
-  secondary: { backgroundColor: "white", borderWidth: 1, borderColor: "#0b6e6e" },
+  primary: { backgroundColor: colors.teal },
+  secondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.teal },
+  ghost: { backgroundColor: "transparent" },
   disabled: { opacity: 0.6 },
-  primaryText: { color: "white", fontWeight: "700", fontSize: 15 },
-  secondaryText: { color: "#0b6e6e", fontWeight: "700", fontSize: 15 },
+  primaryText: { color: colors.white, fontWeight: "800", fontSize: 15 },
+  secondaryText: { color: colors.teal, fontWeight: "800", fontSize: 15 },
 });

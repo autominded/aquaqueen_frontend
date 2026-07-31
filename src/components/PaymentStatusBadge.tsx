@@ -1,14 +1,10 @@
 import React from "react";
-import { StyleSheet, Text } from "react-native";
 import { PaymentStatus } from "../api/types";
+import { StatusPill } from "./StatusPill";
 
 const LABEL: Record<PaymentStatus, string> = { PAID: "Paid", DUE: "Due", PARTIAL: "Partial" };
-const COLOR: Record<PaymentStatus, string> = { PAID: "#0b6e6e", DUE: "#c0392b", PARTIAL: "#b9770e" };
+const TONE: Record<PaymentStatus, "success" | "critical" | "warning"> = { PAID: "success", DUE: "critical", PARTIAL: "warning" };
 
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
-  return <Text style={[styles.badge, { color: COLOR[status] }]}>{LABEL[status]}</Text>;
+  return <StatusPill label={LABEL[status]} tone={TONE[status]} />;
 }
-
-const styles = StyleSheet.create({
-  badge: { fontSize: 12, fontWeight: "700" },
-});

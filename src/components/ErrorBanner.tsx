@@ -1,10 +1,12 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { AppIcon } from "./AppIcon";
+import { colors, radii } from "../theme";
 
 export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: () => void }) {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>{message}</Text>
+      <AppIcon name="alert-circle" size={18} color={colors.coral} /><Text style={styles.text}>{message}</Text>
       {onRetry && (
         <TouchableOpacity onPress={onRetry} style={styles.button}>
           <Text style={styles.buttonText}>Retry</Text>
@@ -16,13 +18,11 @@ export function ErrorBanner({ message, onRetry }: { message: string; onRetry?: (
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#fdecea",
-    borderRadius: 8,
-    padding: 16,
+    backgroundColor: colors.coralSoft, borderRadius: radii.md, padding: 14,
     margin: 16,
-    alignItems: "center",
+    alignItems: "center", flexDirection: "row", gap: 8,
   },
-  text: { color: "#7a2019", marginBottom: 8, textAlign: "center" },
-  button: { backgroundColor: "#7a2019", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 6 },
-  buttonText: { color: "white", fontWeight: "600" },
+  text: { color: colors.coral, textAlign: "left", flex: 1, fontSize: 13, lineHeight: 18 },
+  button: { backgroundColor: colors.coral, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radii.sm },
+  buttonText: { color: colors.white, fontWeight: "800", fontSize: 12 },
 });

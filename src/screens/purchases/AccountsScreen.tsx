@@ -9,14 +9,16 @@ import { ErrorBanner } from "../../components/ErrorBanner";
 import { Card } from "../../components/Card";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { apiErrorMessage } from "../../api/client";
+import { useRefreshing } from "../../lib/useRefreshing";
 
 type Props = NativeStackScreenProps<PurchasesStackParamList, "Accounts">;
 
 export function AccountsScreen({ navigation }: Props) {
-  const { data, isPending, isError, error, refetch, isRefetching } = useQuery({
+  const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: ["ledger"],
     queryFn: fetchLedger,
   });
+  const { refreshing, onRefresh } = useRefreshing();
 
   if (isPending) return <LoadingView />;
   if (isError) return <ErrorBanner message={apiErrorMessage(error)} onRetry={refetch} />;
@@ -35,14 +37,14 @@ export function AccountsScreen({ navigation }: Props) {
       <FlatList
         data={data.accounts}
         keyExtractor={(item) => item.id}
-        refreshing={isRefetching}
-        onRefresh={refetch}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => navigation.navigate("AccountDetail", { accountId: item.id })}>
             <Card>
               <View style={styles.rowBetween}>
                 <Text style={styles.name}>{item.name}</Text>
-                <Text style={[styles.balance, item.balance < 0 && styles.negative]}>${item.balance.toFixed(2)}</Text>
+                <Text style={[styles.balance, item.balance < 0 && styles.negative]}>₹{item.balance.toFixed(2)}</Text>
               </View>
               <Text style={styles.meta}>{item.type === "CASH" ? "Cash" : "Bank"}{item.isClosed ? " · Closed" : ""}</Text>
             </Card>

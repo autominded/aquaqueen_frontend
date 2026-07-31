@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { SalesStackParamList } from "../../navigation/types";
@@ -15,13 +15,16 @@ import { apiErrorMessage } from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
 import { printReceipt } from "../../lib/receipt";
 import { confirmAction } from "../../lib/confirm";
+import { notify } from "../../lib/notify";
+import { useRefreshing } from "../../lib/useRefreshing";
 
 type Props = NativeStackScreenProps<SalesStackParamList, "SalesHistory">;
 
 export function SalesHistoryScreen({ navigation }: Props) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { data, isPending, isError, error, refetch, isRefetching } = useQuery({
+  const { refreshing, onRefresh } = useRefreshing();
+  const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: ["sales"],
     queryFn: fetchSales,
   });
@@ -33,8 +36,15 @@ export function SalesHistoryScreen({ navigation }: Props) {
       queryClient.invalidateQueries({ queryKey: ["sales"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["ledger"] });
+      // Deleting a sale restores any batch fish count its piece-count lines
+      // had decremented — refresh everywhere that's shown.
+      queryClient.invalidateQueries({ queryKey: ["batches"] });
+      queryClient.invalidateQueries({ queryKey: ["batch"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-raceways"] });
+      queryClient.invalidateQueries({ queryKey: ["raceway-operations"] });
     },
-    onError: (err) => Alert.alert("Couldn't delete sale", apiErrorMessage(err)),
+    onError: (err) => notify("Couldn't delete sale", apiErrorMessage(err)),
   });
 
   const confirmDelete = (sale: Sale) => {
@@ -53,7 +63,7 @@ export function SalesHistoryScreen({ navigation }: Props) {
     try {
       await printReceipt(sale, farmQuery.data ?? null, user?.organizationName ?? "AquaQueen");
     } catch (err) {
-      Alert.alert("Couldn't print receipt", apiErrorMessage(err));
+      notify("Couldn't print receipt", apiErrorMessage(err));
     }
   };
 
@@ -65,8 +75,8 @@ export function SalesHistoryScreen({ navigation }: Props) {
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
-        refreshing={isRefetching}
-        onRefresh={refetch}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         contentContainerStyle={data.length === 0 ? styles.emptyContainer : styles.listContent}
         ListEmptyComponent={<EmptyState title="No sales yet" subtitle="Sales you ring up at the POS will show up here." />}
         renderItem={({ item }) => (
@@ -75,7 +85,7 @@ export function SalesHistoryScreen({ navigation }: Props) {
               <Text style={styles.title}>
                 {item.items.length} item{item.items.length === 1 ? "" : "s"}
               </Text>
-              <Text style={styles.amount}>${item.totalAmount.toFixed(2)}</Text>
+              <Text style={styles.amount}>₹{item.totalAmount.toFixed(2)}</Text>
             </View>
             <View style={styles.rowBetween}>
               <Text style={styles.meta}>{new Date(item.createdAt).toDateString()}</Text>

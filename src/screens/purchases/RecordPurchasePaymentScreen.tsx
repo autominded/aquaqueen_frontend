@@ -52,7 +52,7 @@ export function RecordPurchasePaymentScreen({ route, navigation }: Props) {
       {mutation.isError && <ErrorBanner message={apiErrorMessage(mutation.error)} />}
 
       <Text style={styles.description}>{purchase.description}</Text>
-      <Text style={styles.meta}>${paid.toFixed(2)} paid of ${purchase.totalCost.toFixed(2)} — ${remaining.toFixed(2)} remaining</Text>
+      <Text style={styles.meta}>₹{paid.toFixed(2)} paid of ₹{purchase.totalCost.toFixed(2)} — ₹{remaining.toFixed(2)} remaining</Text>
 
       <Text style={styles.label}>Account</Text>
       <View style={styles.chipRow}>

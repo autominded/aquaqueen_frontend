@@ -3,64 +3,107 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { PurchasesStackParamList } from "../../navigation/types";
-import { fetchPurchases, updatePurchase } from "../../api/purchases";
+import { deletePurchaseReceipt, fetchPurchases, updatePurchase, uploadPurchaseReceipt } from "../../api/purchases";
 import { fetchContacts } from "../../api/contacts";
+import { fetchFeedManufacturers, fetchPelletSizes } from "../../api/feedCatalog";
 import { PurchaseCategory } from "../../api/types";
 import { PURCHASE_CATEGORIES, CATEGORY_LABEL } from "./categories";
 import { LoadingView } from "../../components/LoadingView";
 import { EmptyState } from "../../components/EmptyState";
 import { FormField } from "../../components/FormField";
+import { DateField } from "../../components/DateField";
 import { PrimaryButton } from "../../components/PrimaryButton";
+import { FeedItemLine, FeedItemsEditor } from "../../components/FeedItemsEditor";
+import { ReceiptDraft, ReceiptPicker } from "../../components/ReceiptPicker";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { apiErrorMessage } from "../../api/client";
+import { notify } from "../../lib/notify";
+import { API_ORIGIN } from "../../config";
+import { useUnits } from "../../context/UnitsContext";
 
 type Props = NativeStackScreenProps<PurchasesStackParamList, "EditPurchase">;
 
 export function EditPurchaseScreen({ route, navigation }: Props) {
   const { purchaseId } = route.params;
   const queryClient = useQueryClient();
+  const { massUnitLabel, fromDisplayMass, toDisplayMass } = useUnits();
 
   const purchasesQuery = useQuery({ queryKey: ["purchases"], queryFn: fetchPurchases });
   const contactsQuery = useQuery({ queryKey: ["contacts", "SUPPLIER"], queryFn: () => fetchContacts("SUPPLIER") });
+  const manufacturersQuery = useQuery({ queryKey: ["feed-manufacturers"], queryFn: fetchFeedManufacturers });
+  const pelletSizesQuery = useQuery({ queryKey: ["pellet-sizes"], queryFn: fetchPelletSizes });
 
   const purchase = purchasesQuery.data?.find((p) => p.id === purchaseId);
+  const pelletSizes = pelletSizesQuery.data ?? [];
 
   const [seeded, setSeeded] = useState(false);
   const [category, setCategory] = useState<PurchaseCategory>("FEED");
   const [contactId, setContactId] = useState<string | undefined>(undefined);
-  const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState("");
-  const [unit, setUnit] = useState("");
   const [unitCost, setUnitCost] = useState("");
+  const [feedManufacturerId, setFeedManufacturerId] = useState<string | undefined>(undefined);
+  const [feedItems, setFeedItems] = useState<FeedItemLine[]>([]);
   const [purchaseDate, setPurchaseDate] = useState("");
   const [notes, setNotes] = useState("");
+
+  const isFeed = category === "FEED";
+  const isSeed = category === "FINGERLINGS_EGGS";
 
   useEffect(() => {
     if (seeded || !purchase) return;
     setCategory(purchase.category);
     setContactId(purchase.contactId ?? undefined);
-    setDescription(purchase.description);
     setQuantity(String(purchase.quantity));
-    setUnit(purchase.unit);
     setUnitCost(String(purchase.unitCost));
+    setFeedManufacturerId(purchase.feedManufacturerId ?? undefined);
+    setFeedItems(
+      purchase.items.map((i) => ({
+        pelletSizeId: i.pelletSizeId,
+        bagWeight: String(toDisplayMass(i.bagWeightKg)),
+        numberOfBags: String(i.numberOfBags),
+        ratePerBag: String(i.ratePerBag),
+      }))
+    );
     setPurchaseDate(purchase.purchaseDate.slice(0, 10));
     setNotes(purchase.notes ?? "");
     setSeeded(true);
   }, [seeded, purchase]);
 
-  const estimatedTotal = Number(quantity) > 0 && Number(unitCost) > 0 ? Number(quantity) * Number(unitCost) : 0;
+  const feedTotal = feedItems.reduce((sum, l) => sum + (Number(l.numberOfBags) || 0) * (Number(l.ratePerBag) || 0), 0);
+  const estimatedTotal = isFeed
+    ? feedTotal
+    : Number(quantity) > 0 && Number(unitCost) > 0
+      ? Number(quantity) * Number(unitCost)
+      : 0;
   const paidSoFar = purchase?.payments.reduce((sum, p) => sum + p.amount, 0) ?? 0;
   const isFullyPaid = paidSoFar >= estimatedTotal - 0.01;
+
+  const validFeedItems = feedItems.filter(
+    (l) => l.pelletSizeId && Number(l.bagWeight) > 0 && Number(l.numberOfBags) > 0 && Number(l.ratePerBag) > 0
+  );
 
   const mutation = useMutation({
     mutationFn: () =>
       updatePurchase(purchaseId, {
         contactId,
         category,
-        description: description.trim(),
-        quantity: Number(quantity),
-        unit: unit.trim(),
-        unitCost: Number(unitCost),
+        ...(isFeed
+          ? {
+              feedManufacturerId,
+              items: validFeedItems.map((l) => ({
+                pelletSizeId: l.pelletSizeId,
+                bagWeightKg: fromDisplayMass(Number(l.bagWeight)),
+                numberOfBags: Number(l.numberOfBags),
+                ratePerBag: Number(l.ratePerBag),
+              })),
+            }
+          : {
+              // Every non-feed category is counted per piece — the server
+              // synthesizes "pcs", same as it does "bags" for FEED, so no
+              // unit is sent from the client.
+              quantity: Number(quantity),
+              unitCost: Number(unitCost),
+            }),
         purchaseDate,
         notes: notes.trim() || undefined,
       }),
@@ -70,13 +113,28 @@ export function EditPurchaseScreen({ route, navigation }: Props) {
     },
   });
 
-  const canSubmit =
-    description.trim() &&
-    unit.trim() &&
+  // Receipt attach/remove happen immediately against the already-saved
+  // purchase, independent of "Save changes" — no reason to make attaching a
+  // receipt wait on unrelated field edits.
+  const receiptUploadMutation = useMutation({
+    mutationFn: (file: ReceiptDraft) => uploadPurchaseReceipt(purchaseId, file),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["purchases"] }),
+    onError: (err) => notify("Couldn't attach receipt", apiErrorMessage(err)),
+  });
+
+  const receiptRemoveMutation = useMutation({
+    mutationFn: () => deletePurchaseReceipt(purchaseId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["purchases"] }),
+    onError: (err) => notify("Couldn't remove receipt", apiErrorMessage(err)),
+  });
+
+  const canSubmit = Boolean(
     purchaseDate &&
-    Number(quantity) > 0 &&
-    Number(unitCost) > 0 &&
-    (isFullyPaid || !!contactId);
+      (isFullyPaid || !!contactId) &&
+      (isFeed
+        ? feedManufacturerId && validFeedItems.length > 0 && validFeedItems.length === feedItems.length
+        : Number(quantity) > 0 && Number(unitCost) > 0)
+  );
 
   if (purchasesQuery.isPending) return <LoadingView />;
   if (purchasesQuery.isError) return <ErrorBanner message={apiErrorMessage(purchasesQuery.error)} onRetry={purchasesQuery.refetch} />;
@@ -99,18 +157,54 @@ export function EditPurchaseScreen({ route, navigation }: Props) {
         ))}
       </View>
 
-      <FormField label="Description" value={description} onChangeText={setDescription} placeholder="Trout Grower Pellets, 8mm" />
+      {isFeed ? (
+        <>
+          <Text style={styles.label}>Feed manufacturer</Text>
+          <View style={styles.chipRow}>
+            {manufacturersQuery.data?.map((m) => (
+              <PrimaryButton
+                key={m.id}
+                title={m.name}
+                variant={feedManufacturerId === m.id ? "primary" : "secondary"}
+                onPress={() => setFeedManufacturerId(m.id)}
+                style={styles.chip}
+              />
+            ))}
+          </View>
 
-      <View style={styles.row}>
-        <FormField label="Quantity" value={quantity} onChangeText={setQuantity} keyboardType="numeric" placeholder="20" style={styles.rowField} />
-        <FormField label="Unit" value={unit} onChangeText={setUnit} placeholder="bags" style={styles.rowField} />
-      </View>
+          <Text style={styles.label}>Pellet sizes</Text>
+          <FeedItemsEditor pelletSizes={pelletSizes} lines={feedItems} onChange={setFeedItems} weightUnitLabel={massUnitLabel} />
+        </>
+      ) : (
+        <View style={styles.row}>
+          <FormField
+            label={isSeed ? "No. of fingerlings" : "Quantity"}
+            value={quantity}
+            onChangeText={setQuantity}
+            keyboardType="numeric"
+            placeholder={isSeed ? "5000" : "20"}
+            style={styles.rowField}
+          />
+          <FormField
+            label={isSeed ? "Per pc cost" : "Cost per pc"}
+            value={unitCost}
+            onChangeText={setUnitCost}
+            keyboardType="numeric"
+            placeholder="2.50"
+            style={styles.rowField}
+          />
+          <FormField
+            label="Total"
+            value={estimatedTotal > 0 ? `₹${estimatedTotal.toFixed(2)}` : ""}
+            editable={false}
+            placeholder="₹0.00"
+            style={styles.rowField}
+          />
+        </View>
+      )}
+      <Text style={styles.meta}>Already paid ₹{paidSoFar.toFixed(2)} — payments are adjusted separately.</Text>
 
-      <FormField label="Unit cost" value={unitCost} onChangeText={setUnitCost} keyboardType="numeric" placeholder="42.50" />
-      {estimatedTotal > 0 && <Text style={styles.totalPreview}>Total: ${estimatedTotal.toFixed(2)}</Text>}
-      <Text style={styles.meta}>Already paid ${paidSoFar.toFixed(2)} — payments are adjusted separately.</Text>
-
-      <FormField label="Purchase date (YYYY-MM-DD)" value={purchaseDate} onChangeText={setPurchaseDate} />
+      <DateField label="Purchase date" value={purchaseDate} onChange={setPurchaseDate} />
 
       {!isFullyPaid && (
         <Text style={styles.dueNote}>The remaining balance will be owed to the supplier — a supplier is required.</Text>
@@ -136,6 +230,16 @@ export function EditPurchaseScreen({ route, navigation }: Props) {
         ))}
       </View>
 
+      <Text style={styles.label}>Receipt (optional)</Text>
+      <ReceiptPicker
+        draft={null}
+        onPick={(file) => receiptUploadMutation.mutate(file)}
+        existingUrl={purchase.receiptUrl ? `${API_ORIGIN}${purchase.receiptUrl}` : null}
+        onRemove={purchase.receiptUrl ? () => receiptRemoveMutation.mutate() : undefined}
+        removing={receiptRemoveMutation.isPending}
+      />
+      {receiptUploadMutation.isPending && <Text style={styles.meta}>Uploading receipt…</Text>}
+
       <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} multiline placeholder="Any observations" />
 
       <PrimaryButton title="Save changes" onPress={() => mutation.mutate()} loading={mutation.isPending} disabled={!canSubmit} />
@@ -150,7 +254,6 @@ const styles = StyleSheet.create({
   chip: { paddingHorizontal: 12, minWidth: 90 },
   row: { flexDirection: "row", gap: 12 },
   rowField: { flex: 1 },
-  totalPreview: { fontSize: 13, fontWeight: "700", color: "#0b6e6e", marginTop: -8, marginBottom: 4 },
   meta: { fontSize: 12, color: "#7a8787", marginBottom: 16 },
   dueNote: { fontSize: 12, color: "#b9770e", marginBottom: 12 },
 });

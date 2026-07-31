@@ -4,21 +4,26 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { PurchasesStackParamList } from "../../navigation/types";
 import { Card } from "../../components/Card";
 import { useAuth } from "../../context/AuthContext";
+import { AppIcon } from "../../components/AppIcon";
+import { colors } from "../../theme";
 
 type Props = NativeStackScreenProps<PurchasesStackParamList, "PurchasesHome">;
 
 const MENU: {
-  key: "NewPurchase" | "PurchaseHistory" | "Contacts" | "Ledger" | "Accounts";
+  key: "NewPurchase" | "PurchaseHistory" | "Contacts" | "Ledger" | "Accounts" | "FeedInventory" | "FarmInventory" | "Employees";
   title: string;
   subtitle: string;
-  icon: string;
+  icon: React.ComponentProps<typeof AppIcon>["name"];
   permission?: string;
 }[] = [
-  { key: "NewPurchase", title: "New Purchase", subtitle: "Log feed, fingerlings, chemicals, and more", icon: "🧾", permission: "purchases.manage" },
-  { key: "PurchaseHistory", title: "History", subtitle: "See everything the farm has bought", icon: "📜" },
-  { key: "Contacts", title: "Contacts", subtitle: "Suppliers you buy from, customers you sell to", icon: "🏬" },
-  { key: "Ledger", title: "Ledger", subtitle: "Cash & bank balances and transactions", icon: "📒" },
-  { key: "Accounts", title: "Accounts", subtitle: "Manage cash/bank accounts, transfers and deposits", icon: "🏦", permission: "accounts.manage" },
+  { key: "NewPurchase", title: "New purchase", subtitle: "Log feed, fingerlings, chemicals, and more", icon: "plus-circle", permission: "purchases.manage" },
+  { key: "PurchaseHistory", title: "Purchase history", subtitle: "See everything the farm has bought", icon: "clock" },
+  { key: "FeedInventory", title: "Feed inventory", subtitle: "Stock on hand per pellet size", icon: "package" },
+  { key: "FarmInventory", title: "Farm inventory", subtitle: "Equipment and supplies stock, bills and purchase price", icon: "box" },
+  { key: "Employees", title: "Employees", subtitle: "Salary, expenses and leaves", icon: "users", permission: "employees.manage" },
+  { key: "Contacts", title: "Contacts", subtitle: "Suppliers you buy from, customers you sell to", icon: "users" },
+  { key: "Ledger", title: "Ledger", subtitle: "Cash & bank balances and transactions", icon: "book-open" },
+  { key: "Accounts", title: "Accounts", subtitle: "Manage cash, bank, transfers and deposits", icon: "briefcase", permission: "accounts.manage" },
 ];
 
 export function PurchasesHomeScreen({ navigation }: Props) {
@@ -30,12 +35,12 @@ export function PurchasesHomeScreen({ navigation }: Props) {
         <TouchableOpacity key={item.key} onPress={() => navigation.navigate(item.key)}>
           <Card>
             <View style={styles.row}>
-              <Text style={styles.icon}>{item.icon}</Text>
+              <View style={styles.icon}><AppIcon name={item.icon} size={20} color={colors.teal} /></View>
               <View style={styles.textColumn}>
                 <Text style={styles.title}>{item.title}</Text>
                 <Text style={styles.subtitle}>{item.subtitle}</Text>
               </View>
-              <Text style={styles.chevron}>›</Text>
+              <AppIcon name="chevron-right" />
             </View>
           </Card>
         </TouchableOpacity>
@@ -45,11 +50,10 @@ export function PurchasesHomeScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: "#f4f7f7", flexGrow: 1 },
+  container: { padding: 16, backgroundColor: colors.canvas, flexGrow: 1 },
   row: { flexDirection: "row", alignItems: "center" },
-  icon: { fontSize: 24, marginRight: 14 },
+  icon: { width: 42, height: 42, borderRadius: 21, backgroundColor: colors.tealSoft, justifyContent: "center", alignItems: "center", marginRight: 14 },
   textColumn: { flex: 1 },
-  title: { fontSize: 15, fontWeight: "700", color: "#1c2424" },
-  subtitle: { fontSize: 13, color: "#7a8787", marginTop: 2 },
-  chevron: { fontSize: 20, color: "#7a8787" },
+  title: { fontSize: 15, fontWeight: "800", color: colors.ink },
+  subtitle: { fontSize: 13, color: colors.inkMuted, marginTop: 3 },
 });

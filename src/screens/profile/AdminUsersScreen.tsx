@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigation } from "@react-navigation/native";
 import { fetchAdminUsers } from "../../api/admin";
@@ -11,11 +11,16 @@ import { apiErrorMessage } from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
 import { AdminUser } from "../../api/types";
 import { confirmAction } from "../../lib/confirm";
+import { notify } from "../../lib/notify";
+import { useRefreshing } from "../../lib/useRefreshing";
+import { StatusPill } from "../../components/StatusPill";
+import { colors } from "../../theme";
 
 export function AdminUsersScreen() {
   const { user, impersonate } = useAuth();
   const navigation = useNavigation();
-  const { data, isPending, isError, error, refetch, isRefetching } = useQuery({
+  const { refreshing, onRefresh } = useRefreshing();
+  const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: ["admin-users"],
     queryFn: fetchAdminUsers,
   });
@@ -30,7 +35,7 @@ export function AdminUsersScreen() {
       () =>
         impersonate(target.id)
           .then(() => navigation.goBack())
-          .catch((err) => Alert.alert("Couldn't switch farms", apiErrorMessage(err)))
+          .catch((err) => notify("Couldn't switch farms", apiErrorMessage(err)))
     );
   };
 
@@ -42,8 +47,8 @@ export function AdminUsersScreen() {
       <FlatList
         data={data}
         keyExtractor={(item) => item.id}
-        refreshing={isRefetching}
-        onRefresh={refetch}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         contentContainerStyle={data.length === 0 ? styles.emptyContainer : styles.listContent}
         ListEmptyComponent={<EmptyState title="No users yet" />}
         renderItem={({ item }) => (
@@ -51,7 +56,7 @@ export function AdminUsersScreen() {
             <Card>
               <View style={styles.rowBetween}>
                 <Text style={styles.name}>{item.name}</Text>
-                {item.isSuperAdmin && <Text style={styles.badge}>Super admin</Text>}
+                {item.isSuperAdmin && <StatusPill label="Super admin" tone="warning" />}
               </View>
               <Text style={styles.meta}>{item.email}</Text>
               <Text style={styles.meta}>{item.organization.name} · {item.role.name}</Text>
@@ -64,11 +69,10 @@ export function AdminUsersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f4f7f7" },
+  container: { flex: 1, backgroundColor: colors.canvas },
   listContent: { paddingTop: 12 },
   emptyContainer: { flexGrow: 1, justifyContent: "center" },
   rowBetween: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  name: { fontSize: 15, fontWeight: "700", color: "#1c2424" },
-  badge: { fontSize: 12, fontWeight: "700", color: "#0b6e6e" },
-  meta: { fontSize: 13, color: "#7a8787", marginTop: 4 },
+  name: { fontSize: 15, fontWeight: "800", color: colors.ink },
+  meta: { fontSize: 13, color: colors.inkMuted, marginTop: 4 },
 });

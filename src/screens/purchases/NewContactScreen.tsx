@@ -9,6 +9,7 @@ import { FormField } from "../../components/FormField";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { apiErrorMessage } from "../../api/client";
+import { colors } from "../../theme";
 
 type Props = NativeStackScreenProps<PurchasesStackParamList, "NewContact">;
 
@@ -23,7 +24,7 @@ export function NewContactScreen({ navigation }: Props) {
   const [type, setType] = useState<ContactType>("SUPPLIER");
   const [name, setName] = useState("");
   const [contactName, setContactName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [phone, setPhone] = useState("+91 ");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
@@ -34,7 +35,9 @@ export function NewContactScreen({ navigation }: Props) {
         type,
         name: name.trim(),
         contactName: contactName.trim() || undefined,
-        phone: phone.trim() || undefined,
+        // "+91" alone means the user never actually typed a number — don't
+        // save a bare country code as if it were one.
+        phone: phone.trim() && phone.trim() !== "+91" ? phone.trim() : undefined,
         email: email.trim() || undefined,
         address: address.trim() || undefined,
         notes: notes.trim() || undefined,
@@ -66,7 +69,7 @@ export function NewContactScreen({ navigation }: Props) {
 
       <FormField label="Name" value={name} onChangeText={setName} placeholder="Lakeside Feed Co." />
       <FormField label="Contact name (optional)" value={contactName} onChangeText={setContactName} placeholder="Jamie Rivers" />
-      <FormField label="Phone (optional)" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="555-0134" />
+      <FormField label="Phone (optional)" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="+91 98765 43210" />
       <FormField label="Email (optional)" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholder="orders@lakesidefeed.com" />
       <FormField label="Address (optional)" value={address} onChangeText={setAddress} placeholder="45 Mill Road" />
       <FormField label="Notes (optional)" value={notes} onChangeText={setNotes} multiline placeholder="Net-30 terms, delivers Tuesdays" />
@@ -76,8 +79,8 @@ export function NewContactScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: "#f4f7f7", flexGrow: 1 },
-  label: { fontSize: 13, fontWeight: "600", color: "#3f4a4a", marginBottom: 6 },
+  container: { padding: 16, backgroundColor: colors.canvas, flexGrow: 1 },
+  label: { fontSize: 13, fontWeight: "700", color: colors.ink, marginBottom: 7 },
   chipRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
   chip: { flex: 1 },
 });

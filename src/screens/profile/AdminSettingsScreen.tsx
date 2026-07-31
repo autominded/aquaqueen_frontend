@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text } from "react-native";
+import { ScrollView, StyleSheet, Text } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchPlatformSettings, updatePlatformSettings } from "../../api/adminSettings";
 import { LoadingView } from "../../components/LoadingView";
@@ -7,6 +7,10 @@ import { ErrorBanner } from "../../components/ErrorBanner";
 import { FormField } from "../../components/FormField";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { apiErrorMessage } from "../../api/client";
+import { notify } from "../../lib/notify";
+import { RefreshableScrollView } from "../../components/RefreshableScrollView";
+import { useRefreshing } from "../../lib/useRefreshing";
+import { colors } from "../../theme";
 
 // Platform-wide credentials (not org-scoped) — gated by requireSuperAdmin on
 // the server, reachable only from the Profile menu's "Admin" section when
@@ -14,6 +18,7 @@ import { apiErrorMessage } from "../../api/client";
 export function AdminSettingsScreen() {
   const queryClient = useQueryClient();
   const settingsQuery = useQuery({ queryKey: ["platform-settings"], queryFn: fetchPlatformSettings });
+  const { refreshing, onRefresh } = useRefreshing();
 
   const [seeded, setSeeded] = useState(false);
   const [firebaseApiKey, setFirebaseApiKey] = useState("");
@@ -54,7 +59,7 @@ export function AdminSettingsScreen() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["platform-settings"] });
       queryClient.invalidateQueries({ queryKey: ["public-config"] });
-      Alert.alert("Saved", "Platform settings updated.");
+      notify("Saved", "Platform settings updated.");
     },
   });
 
@@ -62,7 +67,11 @@ export function AdminSettingsScreen() {
   if (settingsQuery.isError) return <ErrorBanner message={apiErrorMessage(settingsQuery.error)} onRetry={settingsQuery.refetch} />;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <RefreshableScrollView
+      contentContainerStyle={styles.container}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+    >
       {mutation.isError && <ErrorBanner message={apiErrorMessage(mutation.error)} />}
 
       <Text style={styles.sectionTitle}>Firebase client config</Text>
@@ -100,14 +109,14 @@ export function AdminSettingsScreen() {
       />
 
       <PrimaryButton title="Save settings" onPress={() => mutation.mutate()} loading={mutation.isPending} style={styles.saveButton} />
-    </ScrollView>
+    </RefreshableScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: "#f4f7f7", flexGrow: 1 },
-  sectionTitle: { fontSize: 15, fontWeight: "700", color: "#1c2424", marginTop: 12, marginBottom: 4 },
-  hint: { fontSize: 12, color: "#7a8787", marginBottom: 10 },
+  container: { padding: 16, backgroundColor: colors.canvas, flexGrow: 1 },
+  sectionTitle: { fontSize: 16, fontWeight: "800", color: colors.ocean, marginTop: 14, marginBottom: 6 },
+  hint: { fontSize: 12, color: colors.inkMuted, marginBottom: 10, lineHeight: 17 },
   jsonInput: { minHeight: 120, textAlignVertical: "top" },
   saveButton: { marginTop: 8, marginBottom: 24 },
 });

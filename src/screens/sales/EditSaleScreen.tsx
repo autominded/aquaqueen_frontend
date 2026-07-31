@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { SalesStackParamList } from "../../navigation/types";
@@ -29,11 +29,15 @@ export function EditSaleScreen({ route, navigation }: Props) {
 
   const [seeded, setSeeded] = useState(false);
   const [cart, setCart] = useState<Record<string, number>>({});
+  const [pieceCounts, setPieceCounts] = useState<Record<string, string>>({});
   const [contactId, setContactId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (seeded || !sale) return;
     setCart(Object.fromEntries(sale.items.map((item) => [item.productId, item.quantity])));
+    setPieceCounts(
+      Object.fromEntries(sale.items.filter((item) => item.pieceCount).map((item) => [item.productId, String(item.pieceCount)]))
+    );
     setContactId(sale.contactId ?? undefined);
     setSeeded(true);
   }, [seeded, sale]);
@@ -55,6 +59,11 @@ export function EditSaleScreen({ route, navigation }: Props) {
       else next[product.id] = clamped;
       return next;
     });
+    if (clamped <= 0) setPieceCounts((prev) => ({ ...prev, [product.id]: "" }));
+  };
+
+  const setPieceCountText = (product: Product, text: string) => {
+    setPieceCounts((prev) => ({ ...prev, [product.id]: text }));
   };
 
   const cartLines = useMemo(
@@ -62,10 +71,13 @@ export function EditSaleScreen({ route, navigation }: Props) {
       Object.entries(cart)
         .map(([productId, quantity]) => {
           const product = products.find((p) => p.id === productId);
-          return product ? { product, quantity } : null;
+          if (!product) return null;
+          const pieceCountNum = Math.round(Number(pieceCounts[productId]));
+          const pieceCount = product.unit === "KG" && pieceCountNum > 0 ? pieceCountNum : undefined;
+          return { product, quantity, pieceCount };
         })
-        .filter((line): line is { product: Product; quantity: number } => line !== null),
-    [cart, products]
+        .filter((line): line is { product: Product; quantity: number; pieceCount: number | undefined } => line !== null),
+    [cart, pieceCounts, products]
   );
 
   const total = cartLines.reduce((sum, line) => sum + line.product.price * line.quantity, 0);
@@ -77,11 +89,16 @@ export function EditSaleScreen({ route, navigation }: Props) {
     mutationFn: () =>
       updateSale(saleId, {
         contactId,
-        items: cartLines.map((line) => ({ productId: line.product.id, quantity: line.quantity })),
+        items: cartLines.map((line) => ({ productId: line.product.id, quantity: line.quantity, pieceCount: line.pieceCount })),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sales"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["batches"] });
+      queryClient.invalidateQueries({ queryKey: ["batch"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-raceways"] });
+      queryClient.invalidateQueries({ queryKey: ["raceway-operations"] });
       navigation.goBack();
     },
   });
@@ -105,7 +122,7 @@ export function EditSaleScreen({ route, navigation }: Props) {
             <Card>
               <View style={styles.rowBetween}>
                 <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.price}>${item.price.toFixed(2)}/{UNIT_LABEL[item.unit]}</Text>
+                <Text style={styles.price}>₹{item.price.toFixed(2)}/{UNIT_LABEL[item.unit]}</Text>
               </View>
               <Text style={styles.meta}>{maxQty(item).toLocaleString()} {UNIT_LABEL[item.unit]} available</Text>
               <View style={styles.stepperRow}>
@@ -120,6 +137,18 @@ export function EditSaleScreen({ route, navigation }: Props) {
                 >
                   <Text style={styles.stepperButtonText}>+</Text>
                 </TouchableOpacity>
+                {item.unit === "KG" && qty > 0 && (
+                  <View style={styles.pieceGroup}>
+                    <Text style={styles.pieceLabel}>No. of pcs</Text>
+                    <TextInput
+                      style={styles.pieceInput}
+                      value={pieceCounts[item.id] ?? ""}
+                      onChangeText={(text) => setPieceCountText(item, text)}
+                      keyboardType="number-pad"
+                      placeholder="0"
+                    />
+                  </View>
+                )}
               </View>
             </Card>
           );
@@ -129,12 +158,12 @@ export function EditSaleScreen({ route, navigation }: Props) {
       <View style={styles.cartBar}>
         {mutation.isError && <ErrorBanner message={apiErrorMessage(mutation.error)} />}
         <View style={[styles.rowBetween, styles.totalRow]}>
-          <Text style={styles.totalLabel}>Already paid ${paidSoFar.toFixed(2)}</Text>
-          <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
+          <Text style={styles.totalLabel}>Already paid ₹{paidSoFar.toFixed(2)}</Text>
+          <Text style={styles.totalValue}>₹{total.toFixed(2)}</Text>
         </View>
         {!isFullyPaid && due > 0 && (
           <>
-            <Text style={styles.dueNote}>${due.toFixed(2)} will be owed by the customer.</Text>
+            <Text style={styles.dueNote}>₹{due.toFixed(2)} will be owed by the customer.</Text>
             {customers.length > 0 ? (
               <View style={styles.customerRow}>
                 {customers.map((c) => (
@@ -165,7 +194,7 @@ const styles = StyleSheet.create({
   name: { fontSize: 15, fontWeight: "700", color: "#1c2424", flexShrink: 1 },
   price: { fontSize: 14, fontWeight: "600", color: "#0b6e6e" },
   meta: { fontSize: 13, color: "#7a8787", marginTop: 4 },
-  stepperRow: { flexDirection: "row", alignItems: "center", marginTop: 10, gap: 16 },
+  stepperRow: { flexDirection: "row", alignItems: "center", marginTop: 10, gap: 16, flexWrap: "wrap", rowGap: 10 },
   stepperButton: {
     width: 32,
     height: 32,
@@ -177,6 +206,20 @@ const styles = StyleSheet.create({
   },
   stepperButtonText: { fontSize: 18, fontWeight: "700", color: "#0b6e6e" },
   stepperValue: { fontSize: 15, fontWeight: "700", color: "#1c2424", minWidth: 24, textAlign: "center" },
+  pieceGroup: { alignItems: "flex-start", marginLeft: 20, flexShrink: 0 },
+  pieceLabel: { fontSize: 11, fontWeight: "700", color: "#7a8787", marginBottom: 4 },
+  pieceInput: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#1c2424",
+    minWidth: 72,
+    textAlign: "center",
+    borderWidth: 1,
+    borderColor: "#e2e8e8",
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+  },
   cartBar: {
     backgroundColor: "white",
     padding: 16,

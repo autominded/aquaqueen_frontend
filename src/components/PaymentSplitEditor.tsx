@@ -83,8 +83,8 @@ export function PaymentSplitEditor({ accounts, total, payments, onChange }: Prop
         {remaining === 0
           ? "Payments match the total"
           : remaining < 0
-            ? `Overpaid by $${Math.abs(remaining).toFixed(2)}`
-            : `Remaining: $${remaining.toFixed(2)}`}
+            ? `Overpaid by ₹${Math.abs(remaining).toFixed(2)}`
+            : `Remaining: ₹${remaining.toFixed(2)}`}
       </Text>
     </View>
   );

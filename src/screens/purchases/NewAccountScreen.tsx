@@ -9,6 +9,7 @@ import { FormField } from "../../components/FormField";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { apiErrorMessage } from "../../api/client";
+import { colors } from "../../theme";
 
 type Props = NativeStackScreenProps<PurchasesStackParamList, "NewAccount">;
 
@@ -72,8 +73,8 @@ export function NewAccountScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: "#f4f7f7", flexGrow: 1 },
-  label: { fontSize: 13, fontWeight: "600", color: "#3f4a4a", marginBottom: 6 },
+  container: { padding: 16, backgroundColor: colors.canvas, flexGrow: 1 },
+  label: { fontSize: 13, fontWeight: "700", color: colors.ink, marginBottom: 7 },
   chipRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
   chip: { flex: 1 },
 });

@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "rea
 import { useQuery } from "@tanstack/react-query";
 import { fetchPlaceAutocomplete, fetchPlaceDetails } from "../api/places";
 import { FormField } from "./FormField";
+import { colors, radii } from "../theme";
 
 interface Props {
   value: string;
@@ -58,7 +59,7 @@ export function AddressAutocompleteField({ value, onChangeText, onPlaceSelected 
         }}
         placeholder="Start typing an address…"
       />
-      {selecting && <ActivityIndicator size="small" color="#0b6e6e" style={styles.spinner} />}
+      {selecting && <ActivityIndicator size="small" color={colors.teal} style={styles.spinner} />}
       {suggestions.length > 0 && (
         <View style={styles.suggestions}>
           {suggestions.map((s) => (
@@ -75,14 +76,14 @@ export function AddressAutocompleteField({ value, onChangeText, onPlaceSelected 
 const styles = StyleSheet.create({
   spinner: { marginTop: -8, marginBottom: 12 },
   suggestions: {
-    backgroundColor: "white",
-    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderRadius: radii.sm,
     borderWidth: 1,
-    borderColor: "#d7dede",
+    borderColor: colors.border,
     marginTop: -8,
     marginBottom: 16,
     overflow: "hidden",
   },
-  suggestionRow: { paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#eef1f1" },
-  suggestionText: { fontSize: 14, color: "#1c2424" },
+  suggestionRow: { paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: colors.border },
+  suggestionText: { fontSize: 14, color: colors.ink },
 });

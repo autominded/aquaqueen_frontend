@@ -1,30 +1,25 @@
 import { apiClient } from "./client";
-import { HarvestPlanWithBatch, Product, ProductUnit, Sale } from "./types";
+import { Product, ProductUnit, Sale } from "./types";
 
 export function fetchProducts() {
   return apiClient.get<{ products: Product[] }>("/products").then((r) => r.data.products);
 }
 
 export function createProduct(input: {
-  harvestPlanId: string;
+  batchId?: string;
   name: string;
   unit: ProductUnit;
   price: number;
   availableQty: number;
+  avgWeightG?: number;
 }) {
   return apiClient.post<{ product: Product }>("/products", input).then((r) => r.data.product);
-}
-
-export function fetchCompletedHarvestPlans() {
-  return apiClient
-    .get<{ plans: HarvestPlanWithBatch[] }>("/harvest-plans", { params: { status: "COMPLETED" } })
-    .then((r) => r.data.plans);
 }
 
 export function createSale(input: {
   contactId?: string;
   payments: { accountId: string; amount: number }[];
-  items: { productId: string; quantity: number }[];
+  items: { productId: string; quantity: number; pieceCount?: number }[];
 }) {
   return apiClient.post<{ sale: Sale }>("/sales", input).then((r) => r.data.sale);
 }

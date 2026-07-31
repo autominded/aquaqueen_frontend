@@ -5,14 +5,16 @@ import { BatchesStackParamList } from "../../navigation/types";
 import { createWaterQualityReading } from "../../api/batches";
 import { useEntrySubmit } from "./useEntrySubmit";
 import { FormField } from "../../components/FormField";
+import { DateField } from "../../components/DateField";
 import { PrimaryButton } from "../../components/PrimaryButton";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { apiErrorMessage } from "../../api/client";
+import { colors } from "../../theme";
 
 type Props = NativeStackScreenProps<BatchesStackParamList, "WaterQualityEntry">;
 
 export function WaterQualityEntryScreen({ route }: Props) {
-  const { batchId } = route.params;
+  const { batchId, racewayId } = route.params;
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [temperatureC, setTemperatureC] = useState("");
   const [dissolvedOxygen, setDissolvedOxygen] = useState("");
@@ -28,10 +30,12 @@ export function WaterQualityEntryScreen({ route }: Props) {
         dissolvedOxygen: Number(dissolvedOxygen),
         ph: Number(ph),
         ammonia: Number(ammonia),
+        racewayId,
         notes: notes.trim() || undefined,
       }),
     batchId,
-    "water-quality"
+    "water-quality",
+    racewayId
   );
 
   const canSubmit = date && temperatureC && dissolvedOxygen && ph && ammonia;
@@ -39,7 +43,7 @@ export function WaterQualityEntryScreen({ route }: Props) {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {mutation.isError && <ErrorBanner message={apiErrorMessage(mutation.error)} />}
-      <FormField label="Date (YYYY-MM-DD)" value={date} onChangeText={setDate} />
+      <DateField label="Date" value={date} onChange={setDate} />
       <FormField label="Temperature (°C)" value={temperatureC} onChangeText={setTemperatureC} keyboardType="numeric" placeholder="14.2" />
       <FormField label="Dissolved oxygen (mg/L)" value={dissolvedOxygen} onChangeText={setDissolvedOxygen} keyboardType="numeric" placeholder="8.1" />
       <FormField label="pH" value={ph} onChangeText={setPh} keyboardType="numeric" placeholder="7.4" />
@@ -51,5 +55,5 @@ export function WaterQualityEntryScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: "#f4f7f7", flexGrow: 1 },
+  container: { padding: 16, backgroundColor: colors.canvas, flexGrow: 1 },
 });

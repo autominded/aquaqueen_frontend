@@ -7,13 +7,16 @@ import { RacewayDraft } from "../api/farm";
 interface Props {
   raceways: RacewayDraft[];
   onChange: (raceways: RacewayDraft[]) => void;
+  lengthUnitLabel: "m" | "ft";
 }
 
 // Mirrors PaymentSplitEditor's controlled-array-prop pattern: the parent
 // (FarmSetupScreen) keeps `raceways` in state and resizes the array whenever
 // the "number of raceways" count field changes; this component just renders
-// one editable card per entry.
-export function RacewayListEditor({ raceways, onChange }: Props) {
+// one editable card per entry. Values are in whatever unit the parent seeded
+// them with (see FarmSetupScreen's METRIC/IMPERIAL conversion at load/save time) —
+// this component just labels the fields, it doesn't convert anything itself.
+export function RacewayListEditor({ raceways, onChange, lengthUnitLabel }: Props) {
   const updateField = (index: number, field: keyof RacewayDraft, value: string) => {
     onChange(raceways.map((r, i) => (i === index ? { ...r, [field]: value } : r)));
   };
@@ -36,7 +39,7 @@ export function RacewayListEditor({ raceways, onChange }: Props) {
           <View style={styles.dimensionsRow}>
             <View style={styles.dimensionField}>
               <FormField
-                label="Length (m)"
+                label={`Length (${lengthUnitLabel})`}
                 value={raceway.lengthM}
                 onChangeText={(v) => updateField(index, "lengthM", v)}
                 keyboardType="numeric"
@@ -45,7 +48,7 @@ export function RacewayListEditor({ raceways, onChange }: Props) {
             </View>
             <View style={styles.dimensionField}>
               <FormField
-                label="Width (m)"
+                label={`Width (${lengthUnitLabel})`}
                 value={raceway.widthM}
                 onChangeText={(v) => updateField(index, "widthM", v)}
                 keyboardType="numeric"
@@ -54,7 +57,7 @@ export function RacewayListEditor({ raceways, onChange }: Props) {
             </View>
             <View style={styles.dimensionField}>
               <FormField
-                label="Depth (m)"
+                label={`Depth (${lengthUnitLabel})`}
                 value={raceway.depthM}
                 onChangeText={(v) => updateField(index, "depthM", v)}
                 keyboardType="numeric"
