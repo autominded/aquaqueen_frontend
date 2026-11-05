@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -19,6 +19,11 @@ import { useRefreshing } from "../../lib/useRefreshing";
 
 type Props = NativeStackScreenProps<BatchesStackParamList, "OperationsHome">;
 
+// A busy farm can carry a dozen open alerts at once, which pushed the
+// raceways and everything below them off the bottom of this screen. Show a
+// few, then let the user ask for the rest.
+const ALERT_PREVIEW_COUNT = 3;
+
 // Landing screen for the Operations tab: day-to-day raceway logging up top
 // (same cards as the Home dashboard, now tappable into raceway-scoped
 // feed/sampling/mortality/water-quality), batch management kept as a
@@ -29,6 +34,9 @@ export function OperationsHomeScreen({ navigation }: Props) {
   const alertsQuery = useQuery({ queryKey: ["dashboard-alerts"], queryFn: fetchDashboardAlerts });
   const alerts = alertsQuery.data ?? [];
   const { refreshing, onRefresh } = useRefreshing();
+  const [alertsExpanded, setAlertsExpanded] = useState(false);
+  const hiddenAlertCount = Math.max(0, alerts.length - ALERT_PREVIEW_COUNT);
+  const visibleAlerts = alertsExpanded ? alerts : alerts.slice(0, ALERT_PREVIEW_COUNT);
 
   return (
     <RefreshableScrollView
@@ -44,7 +52,7 @@ export function OperationsHomeScreen({ navigation }: Props) {
       {alertsQuery.isPending && <LoadingView />}
       {alertsQuery.isError && <ErrorBanner message={apiErrorMessage(alertsQuery.error)} onRetry={alertsQuery.refetch} />}
       {alertsQuery.data?.length === 0 && <EmptyState title="All clear" subtitle="There are no operational alerts right now." />}
-      {alerts.map((alert) => (
+      {visibleAlerts.map((alert) => (
         <Card key={alert.id} style={styles.alertCard}>
           <View style={styles.alertIcon}><AppIcon name="alert-triangle" size={18} color={colors.coral} /></View>
           <View style={styles.alertCopy}>
@@ -54,6 +62,18 @@ export function OperationsHomeScreen({ navigation }: Props) {
           <TouchableOpacity accessibilityLabel="Review alert"><AppIcon name="chevron-right" /></TouchableOpacity>
         </Card>
       ))}
+      {hiddenAlertCount > 0 && (
+        <TouchableOpacity
+          onPress={() => setAlertsExpanded((prev) => !prev)}
+          accessibilityRole="button"
+          style={styles.alertToggle}
+        >
+          <Text style={styles.alertToggleText}>
+            {alertsExpanded ? "Show less" : `Show ${hiddenAlertCount} more`}
+          </Text>
+          <AppIcon name={alertsExpanded ? "chevron-up" : "chevron-down"} size={16} color={colors.teal} />
+        </TouchableOpacity>
+      )}
 
       <TouchableOpacity onPress={() => navigation.navigate("TasksHome")}>
         <Card style={styles.manageCard}>
@@ -62,6 +82,22 @@ export function OperationsHomeScreen({ navigation }: Props) {
             <Text style={styles.manageTitle}>Tasks & reminders</Text>
             <Text style={styles.manageHint}>Daily tasks, cleaning, water changes, repairs, grading & assignments</Text>
           </View>
+          <AppIcon name="chevron-right" />
+        </Card>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate("Devices")}>
+        <Card style={styles.manageCard}>
+          <View style={styles.manageIcon}><AppIcon name="cpu" size={18} color={colors.teal} /></View>
+          <View style={styles.manageCopy}>
+            <Text style={styles.manageTitle}>Monitoring devices</Text>
+            <Text style={styles.manageHint}>Live water readings, alerts & aerator control</Text>
+          </View>
+          {/*
+            Device alerts are surfaced on the device screens rather than mixed
+            into the operational alert list above: those are things a person
+            must do, these are things a machine has already reacted to.
+          */}
           <AppIcon name="chevron-right" />
         </Card>
       </TouchableOpacity>
@@ -119,6 +155,8 @@ const styles = StyleSheet.create({
   alertCopy: { flex: 1 },
   alertType: { color: colors.ink, fontSize: 13, fontWeight: "800" },
   alertMessage: { color: colors.inkMuted, fontSize: 12, marginTop: 3, lineHeight: 17 },
+  alertToggle: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 4, paddingVertical: 6, marginBottom: 4 },
+  alertToggleText: { color: colors.teal, fontSize: 13, fontWeight: "700" },
   racewayGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   emptyCard: { marginHorizontal: 0, flexDirection: "row", alignItems: "center", gap: 11, borderWidth: 1, borderColor: colors.border },
   emptyCopy: { flex: 1 },

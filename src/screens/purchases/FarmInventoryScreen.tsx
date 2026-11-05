@@ -149,7 +149,17 @@ function ThresholdEditor({ item }: { item: FarmInventoryItem }) {
   return (
     <View style={styles.thresholdEditRow}>
       <FormField label="" value={draft} onChangeText={setDraft} keyboardType="numeric" placeholder="Alert below…" style={styles.thresholdInput} />
-      <PrimaryButton title="Save" onPress={() => saveMutation.mutate()} loading={saveMutation.isPending} style={styles.thresholdSaveButton} />
+      {/* A blank draft intentionally clears the threshold (see mutationFn
+          above), so only block Save for non-empty-but-invalid input (a typo
+          like "abc" or a negative number) — don't require draft > 0 the way
+          FeedInventoryScreen does, that would make clearing impossible. */}
+      <PrimaryButton
+        title="Save"
+        onPress={() => saveMutation.mutate()}
+        loading={saveMutation.isPending}
+        disabled={draft.trim() !== "" && !(Number(draft) > 0)}
+        style={styles.thresholdSaveButton}
+      />
       <PrimaryButton title="Cancel" variant="secondary" onPress={() => setEditing(false)} style={styles.thresholdSaveButton} />
     </View>
   );

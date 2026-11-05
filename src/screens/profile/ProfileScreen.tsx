@@ -13,7 +13,7 @@ import { colors, radii } from "../../theme";
 type Props = NativeStackScreenProps<ProfileStackParamList, "Profile">;
 
 const MENU: {
-  key: "FarmSetup" | "Hatchery" | "Team" | "Roles" | "AdminUsers" | "AdminSettings" | "FeedCatalog" | "Species" | "MortalityCauses" | "AdminAdvisories" | "IndustryUpdates" | "AdminIndustryPosts" | "MarketplaceHome";
+  key: "FarmSetup" | "Hatchery" | "Team" | "Roles" | "AdminUsers" | "AdminOrganizations" | "AdminSettings" | "FeedCatalog" | "Species" | "MortalityCauses" | "AdminAdvisories" | "IndustryUpdates" | "AdminIndustryPosts" | "MarketplaceHome";
   title: string;
   subtitle: string;
   permission?: string;
@@ -28,6 +28,7 @@ const MENU: {
   { key: "MarketplaceHome", title: "Marketplace", subtitle: "Buy and sell equipment, livestock, feed & supplies" },
   { key: "IndustryUpdates", title: "Industry updates", subtitle: "News and updates from AquaQueen" },
   { key: "AdminUsers", title: "Admin", subtitle: "Every user across every farm", superAdminOnly: true },
+  { key: "AdminOrganizations", title: "Organizations", subtitle: "Lock, resume or remove a farm's access", superAdminOnly: true },
   { key: "AdminAdvisories", title: "Advisories", subtitle: "Push weather, temperature or news alerts to every user", superAdminOnly: true },
   { key: "AdminIndustryPosts", title: "Manage industry updates", subtitle: "Publish news and updates for every user", superAdminOnly: true },
   { key: "AdminSettings", title: "Platform settings", subtitle: "Firebase and Google Maps credentials for the whole app", superAdminOnly: true },

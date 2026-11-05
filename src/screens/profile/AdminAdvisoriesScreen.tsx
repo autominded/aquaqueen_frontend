@@ -28,8 +28,33 @@ const TYPE_OPTIONS: { value: AdvisoryType; label: string }[] = [
   { value: "GENERAL", label: "General" },
 ];
 
+// Typed in days rather than picked from a list: an advisory always expires,
+// and the author thinks in "how long does this matter for", not in calendar
+// dates. Mirrors ADVISORY_EXPIRY_DAYS on the server, which is the real
+// boundary — this only keeps the user from submitting a value it'd reject.
+const EXPIRY_DAYS_MIN = 1;
+const EXPIRY_DAYS_MAX = 365;
+const DEFAULT_EXPIRY_DAYS = "7";
+
+function parseExpiryDays(raw: string): number | null {
+  // Rejects "7.5", "1e3" and leading-zero oddities up front — the field is
+  // numeric-keyboard on native but free text on web, so it can receive
+  // anything.
+  if (!/^\d+$/.test(raw.trim())) return null;
+  const days = Number(raw.trim());
+  return days >= EXPIRY_DAYS_MIN && days <= EXPIRY_DAYS_MAX ? days : null;
+}
+
 function formatDateTime(iso: string) {
   return new Date(iso).toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+// Past-tense once the window has closed — an expired advisory is still
+// listed here for the admin's own history, but it has already stopped
+// reaching users, and the two states shouldn't look alike.
+function formatExpiry(iso: string) {
+  const expiry = new Date(iso);
+  return `${expiry.getTime() <= Date.now() ? "expired" : "expires"} ${formatDateTime(iso)}`;
 }
 
 export function AdminAdvisoriesScreen() {
@@ -45,9 +70,17 @@ export function AdminAdvisoriesScreen() {
   const [body, setBody] = useState("");
   const [severity, setSeverity] = useState<AdvisorySeverity | undefined>(undefined);
   const [type, setType] = useState<AdvisoryType | undefined>(undefined);
+  const [expiresInDays, setExpiresInDays] = useState<string>(DEFAULT_EXPIRY_DAYS);
 
   const createMutation = useMutation({
-    mutationFn: () => createAdvisory({ title: title.trim(), body: body.trim(), severity: severity!, type: type! }),
+    mutationFn: () =>
+      createAdvisory({
+        title: title.trim(),
+        body: body.trim(),
+        severity: severity!,
+        type: type!,
+        expiresInDays: parseExpiryDays(expiresInDays)!,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-advisories"] });
       setAdding(false);
@@ -55,10 +88,15 @@ export function AdminAdvisoriesScreen() {
       setBody("");
       setSeverity(undefined);
       setType(undefined);
+      setExpiresInDays(DEFAULT_EXPIRY_DAYS);
     },
   });
 
-  const canSubmit = title.trim() && body.trim() && severity && type;
+  const expiryDays = parseExpiryDays(expiresInDays);
+  // Only surfaced once something has been typed — an empty field on a form
+  // the user just opened isn't an error yet.
+  const expiryError = expiresInDays.trim() && expiryDays === null ? `Enter a whole number of days (${EXPIRY_DAYS_MIN}–${EXPIRY_DAYS_MAX})` : undefined;
+  const canSubmit = title.trim() && body.trim() && severity && type && expiryDays !== null;
 
   return (
     <View style={styles.container}>
@@ -78,6 +116,14 @@ export function AdminAdvisoriesScreen() {
                 <FormField label="Message" value={body} onChangeText={setBody} placeholder="A cold front is expected tonight; check heaters." multiline />
                 <SelectField label="Severity" value={severity ?? null} onSelect={(v) => setSeverity(v as AdvisorySeverity)} options={SEVERITY_OPTIONS} placeholder="Select severity" />
                 <SelectField label="Type" value={type ?? null} onSelect={(v) => setType(v as AdvisoryType)} options={TYPE_OPTIONS} placeholder="Select type" />
+                <FormField
+                  label="Expires in (days)"
+                  value={expiresInDays}
+                  onChangeText={setExpiresInDays}
+                  keyboardType="number-pad"
+                  placeholder="7"
+                  error={expiryError}
+                />
                 <View style={styles.addActions}>
                   <PrimaryButton title="Cancel" variant="secondary" onPress={() => setAdding(false)} style={styles.addButton} />
                   <PrimaryButton title="Push to all users" onPress={() => createMutation.mutate()} loading={createMutation.isPending} disabled={!canSubmit} style={styles.addButton} />
@@ -103,7 +149,7 @@ export function AdminAdvisoriesScreen() {
               />
             </View>
             <Text style={styles.body}>{item.body}</Text>
-            <Text style={styles.meta}>{item.type} · {formatDateTime(item.createdAt)} · {item._count.dismissals} dismissed</Text>
+            <Text style={styles.meta}>{item.type} · {formatDateTime(item.createdAt)} · {formatExpiry(item.expiresAt)} · {item._count.dismissals} dismissed</Text>
           </Card>
         )}
       />

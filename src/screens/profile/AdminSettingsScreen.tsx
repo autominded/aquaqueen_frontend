@@ -5,7 +5,9 @@ import { fetchPlatformSettings, updatePlatformSettings } from "../../api/adminSe
 import { LoadingView } from "../../components/LoadingView";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { FormField } from "../../components/FormField";
+import { SelectField } from "../../components/SelectField";
 import { PrimaryButton } from "../../components/PrimaryButton";
+import { LengthUnitSetting } from "../../api/types";
 import { apiErrorMessage } from "../../api/client";
 import { notify } from "../../lib/notify";
 import { RefreshableScrollView } from "../../components/RefreshableScrollView";
@@ -29,6 +31,7 @@ export function AdminSettingsScreen() {
   const [firebaseAppId, setFirebaseAppId] = useState("");
   const [googleMapsApiKey, setGoogleMapsApiKey] = useState("");
   const [firebaseServiceAccountJson, setFirebaseServiceAccountJson] = useState("");
+  const [defaultLengthUnit, setDefaultLengthUnit] = useState<LengthUnitSetting>("METRE");
 
   useEffect(() => {
     if (seeded || !settingsQuery.data) return;
@@ -41,6 +44,7 @@ export function AdminSettingsScreen() {
     setFirebaseAppId(s.firebaseAppId ?? "");
     setGoogleMapsApiKey(s.googleMapsApiKey ?? "");
     setFirebaseServiceAccountJson(s.firebaseServiceAccountJson ?? "");
+    setDefaultLengthUnit(s.defaultLengthUnit ?? "METRE");
     setSeeded(true);
   }, [seeded, settingsQuery.data]);
 
@@ -55,6 +59,7 @@ export function AdminSettingsScreen() {
         firebaseAppId: firebaseAppId.trim() || undefined,
         googleMapsApiKey: googleMapsApiKey.trim() || undefined,
         firebaseServiceAccountJson: firebaseServiceAccountJson.trim() || undefined,
+        defaultLengthUnit,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["platform-settings"] });
@@ -87,6 +92,22 @@ export function AdminSettingsScreen() {
         autoCapitalize="none"
       />
       <FormField label="App ID" value={firebaseAppId} onChangeText={setFirebaseAppId} autoCapitalize="none" />
+
+      <Text style={styles.sectionTitle}>Measurement units</Text>
+      <Text style={styles.hint}>
+        The unit raceway dimensions start in for anyone who hasn't picked their own under Profile → Units. Dimensions
+        are always stored in metres, so changing this only affects how they're shown — no existing record is rewritten.
+      </Text>
+      <SelectField
+        label="Default raceway dimension unit"
+        value={defaultLengthUnit}
+        onSelect={(value) => setDefaultLengthUnit(value as LengthUnitSetting)}
+        options={[
+          { value: "METRE", label: "Metres (m)" },
+          { value: "CENTIMETRE", label: "Centimetres (cm)" },
+          { value: "FOOT", label: "Feet (ft)" },
+        ]}
+      />
 
       <Text style={styles.sectionTitle}>Google Maps</Text>
       <Text style={styles.hint}>Used for the farm-setup location pin preview (Maps Static API).</Text>

@@ -37,6 +37,7 @@ export function UnitPreferenceCard({
       <Text style={styles.groupLabel}>Raceway dimensions</Text>
       <View style={styles.choices}>
         <UnitChoice label="Metres" detail="m" active={lengthUnit === "m"} onPress={() => setLengthUnit("m")} />
+        <UnitChoice label="Centimetres" detail="cm" active={lengthUnit === "cm"} onPress={() => setLengthUnit("cm")} />
         <UnitChoice label="Feet" detail="ft" active={lengthUnit === "ft"} onPress={() => setLengthUnit("ft")} />
       </View>
 

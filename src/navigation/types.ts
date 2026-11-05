@@ -1,4 +1,5 @@
 import { NavigatorScreenParams } from "@react-navigation/native";
+import { DeviceChannel } from "../api/types";
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -25,6 +26,16 @@ export type BatchesStackParamList = {
   WaterChangeTasks: undefined;
   RepairTasks: undefined;
   StockTransfers: undefined;
+  // Monitoring devices sit in the Operations tab rather than getting one of
+  // their own: they're an input to raceway operations, not a separate domain,
+  // and the tab bar is already at five.
+  Devices: undefined;
+  AddDevice: undefined;
+  DeviceDetail: { deviceId: string };
+  DeviceSettings: { deviceId: string };
+  DeviceChannels: { deviceId: string };
+  DeviceThresholds: { deviceId: string };
+  DeviceCalibration: { deviceId: string; channel: DeviceChannel };
 };
 
 export type SalesStackParamList = {
@@ -44,6 +55,7 @@ export type HatcheryStackParamList = {
   HatcheryBatches: undefined;
   HatcheryBatchDetail: { hatcheryBatchId: string };
   Trays: undefined;
+  HatcheryRaceways: undefined;
 };
 
 export type ProfileStackParamList = {
@@ -54,6 +66,7 @@ export type ProfileStackParamList = {
   Roles: undefined;
   RoleForm: { roleId?: string };
   AdminUsers: undefined;
+  AdminOrganizations: undefined;
   AdminSettings: undefined;
   FeedCatalog: undefined;
   Species: undefined;

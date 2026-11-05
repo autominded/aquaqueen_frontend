@@ -40,6 +40,22 @@
           "photosPermission": "Allow AquaQueen to access your photos to set a farm photo."
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow AquaQueen to use the camera to scan the setup code on a monitoring device.",
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ],
+      [
+        "@orbital-systems/react-native-esp-idf-provisioning",
+        {
+          "transport": "ble",
+          "bluetoothAlwaysPermission": "Allow AquaQueen to use Bluetooth to set up a new monitoring device.",
+          "locationWhenInUsePermission": "Android requires location access for any Bluetooth scan. AquaQueen only uses it to find nearby monitoring devices, never to track you."
+        }
+      ],
       "expo-sharing",
       "expo-notifications",
       "@react-native-firebase/app",

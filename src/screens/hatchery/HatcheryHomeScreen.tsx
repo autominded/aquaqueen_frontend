@@ -9,11 +9,12 @@ import { colors } from "../../theme";
 type Props = NativeStackScreenProps<HatcheryStackParamList, "HatcheryHome">;
 
 const MENU: {
-  key: "Broodstock" | "HatcheryBatches" | "Trays";
+  key: "HatcheryRaceways" | "Broodstock" | "HatcheryBatches" | "Trays";
   title: string;
   subtitle: string;
   icon: React.ComponentProps<typeof AppIcon>["name"];
 }[] = [
+  { key: "HatcheryRaceways", title: "Hatchery raceways", subtitle: "Troughs and broodstock tanks, separate from the farm's grow-out raceways", icon: "columns" },
   { key: "Broodstock", title: "Broodstock", subtitle: "Raceways housing broodstock, photoperiod, stripping plans", icon: "sunrise" },
   { key: "HatcheryBatches", title: "Egg & fingerling batches", subtitle: "Track eggs from stripping through to fingerling sale", icon: "activity" },
   { key: "Trays", title: "Trays", subtitle: "Incubation trays this hatchery uses", icon: "grid" },

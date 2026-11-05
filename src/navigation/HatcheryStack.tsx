@@ -7,6 +7,7 @@ import { BroodstockDetailScreen } from "../screens/hatchery/BroodstockDetailScre
 import { HatcheryBatchesScreen } from "../screens/hatchery/HatcheryBatchesScreen";
 import { HatcheryBatchDetailScreen } from "../screens/hatchery/HatcheryBatchDetailScreen";
 import { TraysScreen } from "../screens/hatchery/TraysScreen";
+import { HatcheryRacewaysScreen } from "../screens/hatchery/HatcheryRacewaysScreen";
 import { stackScreenOptions } from "../theme";
 
 const Stack = createNativeStackNavigator<HatcheryStackParamList>();
@@ -20,6 +21,7 @@ export function HatcheryStack() {
       <Stack.Screen name="HatcheryBatches" component={HatcheryBatchesScreen} options={{ title: "Egg & fingerling batches" }} />
       <Stack.Screen name="HatcheryBatchDetail" component={HatcheryBatchDetailScreen} options={{ title: "Batch" }} />
       <Stack.Screen name="Trays" component={TraysScreen} options={{ title: "Trays" }} />
+      <Stack.Screen name="HatcheryRaceways" component={HatcheryRacewaysScreen} options={{ title: "Hatchery raceways" }} />
     </Stack.Navigator>
   );
 }

@@ -20,6 +20,9 @@ export function createDailyTask(input: { title: string; notes?: string; dueDate:
 export function completeDailyTask(id: string) {
   return apiClient.post<{ task: DailyTask }>(`/daily-tasks/${id}/complete`).then((r) => r.data.task);
 }
+export function reopenDailyTask(id: string) {
+  return apiClient.post<{ task: DailyTask }>(`/daily-tasks/${id}/reopen`).then((r) => r.data.task);
+}
 export function deleteDailyTask(id: string) {
   return apiClient.delete(`/daily-tasks/${id}`);
 }
@@ -45,6 +48,9 @@ export function toggleCleaningChecklistItem(taskId: string, itemId: string, done
 export function completeCleaningTask(id: string) {
   return apiClient.post<{ task: CleaningTask }>(`/cleaning-tasks/${id}/complete`).then((r) => r.data.task);
 }
+export function reopenCleaningTask(id: string) {
+  return apiClient.post<{ task: CleaningTask }>(`/cleaning-tasks/${id}/reopen`).then((r) => r.data.task);
+}
 export function deleteCleaningTask(id: string) {
   return apiClient.delete(`/cleaning-tasks/${id}`);
 }
@@ -66,6 +72,9 @@ export function createWaterChangeTask(input: {
 export function completeWaterChangeTask(id: string) {
   return apiClient.post<{ task: WaterChangeTask }>(`/water-change-tasks/${id}/complete`).then((r) => r.data.task);
 }
+export function reopenWaterChangeTask(id: string) {
+  return apiClient.post<{ task: WaterChangeTask }>(`/water-change-tasks/${id}/reopen`).then((r) => r.data.task);
+}
 export function deleteWaterChangeTask(id: string) {
   return apiClient.delete(`/water-change-tasks/${id}`);
 }
@@ -86,6 +95,9 @@ export function createRepairTask(input: {
 }
 export function completeRepairTask(id: string) {
   return apiClient.post<{ task: RepairTask }>(`/repair-tasks/${id}/complete`).then((r) => r.data.task);
+}
+export function reopenRepairTask(id: string) {
+  return apiClient.post<{ task: RepairTask }>(`/repair-tasks/${id}/reopen`).then((r) => r.data.task);
 }
 export function deleteRepairTask(id: string) {
   return apiClient.delete(`/repair-tasks/${id}`);

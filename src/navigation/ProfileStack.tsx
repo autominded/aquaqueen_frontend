@@ -8,6 +8,7 @@ import { NewTeamMemberScreen } from "../screens/profile/NewTeamMemberScreen";
 import { RolesScreen } from "../screens/profile/RolesScreen";
 import { RoleFormScreen } from "../screens/profile/RoleFormScreen";
 import { AdminUsersScreen } from "../screens/profile/AdminUsersScreen";
+import { AdminOrganizationsScreen } from "../screens/profile/AdminOrganizationsScreen";
 import { AdminSettingsScreen } from "../screens/profile/AdminSettingsScreen";
 import { FeedCatalogScreen } from "../screens/profile/FeedCatalogScreen";
 import { SpeciesScreen } from "../screens/profile/SpeciesScreen";
@@ -39,6 +40,7 @@ export function ProfileStack() {
       <Stack.Screen name="Roles" component={RolesScreen} options={{ title: "Roles" }} />
       <Stack.Screen name="RoleForm" component={RoleFormScreen} options={{ title: "Role" }} />
       <Stack.Screen name="AdminUsers" component={AdminUsersScreen} options={{ title: "All users" }} />
+      <Stack.Screen name="AdminOrganizations" component={AdminOrganizationsScreen} options={{ title: "Organizations" }} />
       <Stack.Screen name="AdminSettings" component={AdminSettingsScreen} options={{ title: "Platform settings" }} />
       <Stack.Screen name="FeedCatalog" component={FeedCatalogScreen} options={{ title: "Feed catalog" }} />
       <Stack.Screen name="Species" component={SpeciesScreen} options={{ title: "Species" }} />

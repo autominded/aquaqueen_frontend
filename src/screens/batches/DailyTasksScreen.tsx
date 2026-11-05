@@ -3,7 +3,7 @@ import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { BatchesStackParamList } from "../../navigation/types";
-import { completeDailyTask, createDailyTask, fetchDailyTasks } from "../../api/tasks";
+import { completeDailyTask, createDailyTask, fetchDailyTasks, reopenDailyTask } from "../../api/tasks";
 import { fetchTeam } from "../../api/users";
 import { RecurrenceType } from "../../api/types";
 import { LoadingView } from "../../components/LoadingView";
@@ -55,6 +55,11 @@ export function DailyTasksScreen(_props: Props) {
 
   const completeMutation = useMutation({
     mutationFn: (id: string) => completeDailyTask(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["daily-tasks"] }),
+  });
+
+  const reopenMutation = useMutation({
+    mutationFn: (id: string) => reopenDailyTask(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["daily-tasks"] }),
   });
 
@@ -117,8 +122,10 @@ export function DailyTasksScreen(_props: Props) {
               {item.recurrence !== "NONE" ? ` · repeats ${item.recurrence.toLowerCase()}` : ""}
               {item.assignedTo ? ` · ${item.assignedTo.name}` : ""}
             </Text>
-            {item.status !== "DONE" && (
+            {item.status !== "DONE" ? (
               <PrimaryButton title="Mark done" variant="secondary" onPress={() => completeMutation.mutate(item.id)} loading={completeMutation.isPending} style={styles.completeButton} />
+            ) : (
+              <PrimaryButton title="Reopen" variant="ghost" onPress={() => reopenMutation.mutate(item.id)} loading={reopenMutation.isPending} style={styles.completeButton} />
             )}
           </Card>
         )}

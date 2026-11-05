@@ -38,7 +38,19 @@ export function WaterQualityEntryScreen({ route }: Props) {
     racewayId
   );
 
-  const canSubmit = date && temperatureC && dissolvedOxygen && ph && ammonia;
+  // Same bounds as the server's createWaterQualityEntrySchema — catches an
+  // obviously-wrong value (a misplaced decimal, a stray extra digit) before
+  // the round trip, not a substitute for the server-side check.
+  const inRange = (value: string, min: number, max: number) => {
+    const n = Number(value);
+    return Number.isFinite(n) && n >= min && n <= max;
+  };
+  const canSubmit =
+    date &&
+    inRange(temperatureC, -2, 45) &&
+    inRange(dissolvedOxygen, 0, 30) &&
+    inRange(ph, 0, 14) &&
+    inRange(ammonia, 0, 100);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

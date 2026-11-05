@@ -17,6 +17,13 @@ import { CleaningTasksScreen } from "../screens/batches/CleaningTasksScreen";
 import { WaterChangeTasksScreen } from "../screens/batches/WaterChangeTasksScreen";
 import { RepairTasksScreen } from "../screens/batches/RepairTasksScreen";
 import { StockTransfersScreen } from "../screens/batches/StockTransfersScreen";
+import { DevicesScreen } from "../screens/devices/DevicesScreen";
+import { AddDeviceScreen } from "../screens/devices/AddDeviceScreen";
+import { DeviceDetailScreen } from "../screens/devices/DeviceDetailScreen";
+import { DeviceSettingsScreen } from "../screens/devices/DeviceSettingsScreen";
+import { DeviceChannelsScreen } from "../screens/devices/DeviceChannelsScreen";
+import { DeviceThresholdsScreen } from "../screens/devices/DeviceThresholdsScreen";
+import { DeviceCalibrationScreen } from "../screens/devices/DeviceCalibrationScreen";
 import { stackScreenOptions } from "../theme";
 
 const Stack = createNativeStackNavigator<BatchesStackParamList>();
@@ -40,6 +47,13 @@ export function BatchesStack() {
       <Stack.Screen name="WaterChangeTasks" component={WaterChangeTasksScreen} options={{ title: "Water changes" }} />
       <Stack.Screen name="RepairTasks" component={RepairTasksScreen} options={{ title: "Repairs" }} />
       <Stack.Screen name="StockTransfers" component={StockTransfersScreen} options={{ title: "Grading & transfer" }} />
+      <Stack.Screen name="Devices" component={DevicesScreen} options={{ title: "Monitoring devices" }} />
+      <Stack.Screen name="AddDevice" component={AddDeviceScreen} options={{ title: "Add a device" }} />
+      <Stack.Screen name="DeviceDetail" component={DeviceDetailScreen} options={{ title: "Device" }} />
+      <Stack.Screen name="DeviceSettings" component={DeviceSettingsScreen} options={{ title: "Name & raceway" }} />
+      <Stack.Screen name="DeviceChannels" component={DeviceChannelsScreen} options={{ title: "Probes" }} />
+      <Stack.Screen name="DeviceThresholds" component={DeviceThresholdsScreen} options={{ title: "Alert limits" }} />
+      <Stack.Screen name="DeviceCalibration" component={DeviceCalibrationScreen} options={{ title: "Calibrate" }} />
     </Stack.Navigator>
   );
 }

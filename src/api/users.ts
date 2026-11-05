@@ -8,3 +8,15 @@ export function fetchTeam() {
 export function createTeamMember(input: { name: string; email: string; password: string; roleId: string }) {
   return apiClient.post<{ user: TeamMember }>("/users", input).then((r) => r.data.user);
 }
+
+export function updateTeamMemberRole(id: string, roleId: string) {
+  return apiClient.patch<{ user: TeamMember }>(`/users/${id}`, { roleId }).then((r) => r.data.user);
+}
+
+export function deactivateTeamMember(id: string) {
+  return apiClient.post<{ user: TeamMember }>(`/users/${id}/deactivate`).then((r) => r.data.user);
+}
+
+export function reactivateTeamMember(id: string) {
+  return apiClient.post<{ user: TeamMember }>(`/users/${id}/reactivate`).then((r) => r.data.user);
+}

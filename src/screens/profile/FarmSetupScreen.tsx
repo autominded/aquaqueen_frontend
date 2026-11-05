@@ -24,7 +24,7 @@ import { AppIcon } from "../../components/AppIcon";
 import { useRefreshing } from "../../lib/useRefreshing";
 import { RefreshableScrollView } from "../../components/RefreshableScrollView";
 import { colors, radii } from "../../theme";
-import { useUnits } from "../../context/UnitsContext";
+import { useUnits, LENGTH_PER_METRE } from "../../context/UnitsContext";
 import { ProfileStackParamList, AppTabParamList } from "../../navigation/types";
 
 type Props = NativeStackScreenProps<ProfileStackParamList, "FarmSetup">;
@@ -119,8 +119,8 @@ export function FarmSetupScreen({ navigation }: Props) {
   useEffect(() => {
     const prevUnit = prevLengthUnitRef.current;
     if (prevUnit !== lengthUnitLabel) {
-      const metresPerPrevUnit = prevUnit === "ft" ? 1 / 3.28084 : 1;
-      const metresPerNewUnit = lengthUnitLabel === "ft" ? 1 / 3.28084 : 1;
+      const metresPerPrevUnit = 1 / LENGTH_PER_METRE[prevUnit];
+      const metresPerNewUnit = 1 / LENGTH_PER_METRE[lengthUnitLabel];
       const convert = (value: string) => {
         if (value.trim() === "") return value;
         const num = Number(value);

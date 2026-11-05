@@ -3,11 +3,12 @@ import { StyleSheet, Text, View } from "react-native";
 import { Card } from "./Card";
 import { FormField } from "./FormField";
 import { RacewayDraft } from "../api/farm";
+import { LengthUnit } from "../context/UnitsContext";
 
 interface Props {
   raceways: RacewayDraft[];
   onChange: (raceways: RacewayDraft[]) => void;
-  lengthUnitLabel: "m" | "ft";
+  lengthUnitLabel: LengthUnit;
 }
 
 // Mirrors PaymentSplitEditor's controlled-array-prop pattern: the parent

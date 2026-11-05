@@ -50,8 +50,17 @@ export interface AdminUser {
   name: string;
   email: string;
   isSuperAdmin: boolean;
+  deactivatedAt: string | null;
   role: RoleRef;
-  organization: { id: string; name: string };
+  organization: { id: string; name: string; lockedAt: string | null };
+}
+
+export interface AdminOrganization {
+  id: string;
+  name: string;
+  createdAt: string;
+  lockedAt: string | null;
+  userCount: number;
 }
 
 export interface TeamMember {
@@ -60,6 +69,7 @@ export interface TeamMember {
   email: string;
   role: RoleRef;
   createdAt: string;
+  deactivatedAt: string | null;
 }
 
 export interface RacewayStocking {
@@ -123,16 +133,26 @@ export interface MortalityEntry {
   createdAt: string;
 }
 
+// Measurements are nullable now that monitoring devices write here too.
+// Probes are sold separately from the node, so a device may only ever report
+// water temperature — and a farmer logging by hand may likewise have measured
+// only what they had a meter for.
+//
+// Absent must render as "—", never as 0. A raceway with no dissolved-oxygen
+// probe and a raceway whose oxygen has crashed are not the same thing, and
+// only one of them is an emergency.
 export interface WaterQualityReading {
   id: string;
   batchId: string;
   racewayId?: string | null;
   date: string;
-  temperatureC: number;
-  dissolvedOxygen: number;
-  ph: number;
-  ammonia: number;
+  temperatureC?: number | null;
+  dissolvedOxygen?: number | null;
+  ph?: number | null;
+  ammonia?: number | null;
   notes?: string | null;
+  // Set when this row was rolled up from a device rather than typed in.
+  deviceId?: string | null;
   createdAt: string;
 }
 
@@ -260,6 +280,8 @@ export interface Sale {
   payments: SalePayment[];
 }
 
+export type RacewayPurpose = "FARM" | "HATCHERY";
+
 export interface Raceway {
   id: string;
   farmId: string;
@@ -267,8 +289,15 @@ export interface Raceway {
   lengthM: number;
   widthM: number;
   depthM: number;
+  purpose: RacewayPurpose;
   createdAt: string;
   updatedAt: string;
+}
+
+// Same row as Raceway, returned by /hatchery-raceways with the broodstock
+// currently housed in it — the hatchery screen's whole reason to exist.
+export interface HatcheryRaceway extends Raceway {
+  broodstocks: { id: string; species: string; count: number }[];
 }
 
 export type EmployeeStatus = "ACTIVE" | "INACTIVE";
@@ -345,7 +374,12 @@ export interface PlatformPublicConfig {
     appId: string | null;
   };
   googleMapsApiKey: string | null;
+  // Which unit a device that has never chosen one starts on for raceway
+  // dimensions. Stored values are always metres — this is display only.
+  defaultLengthUnit: LengthUnitSetting;
 }
+
+export type LengthUnitSetting = "METRE" | "CENTIMETRE" | "FOOT";
 
 export interface PlatformSettings {
   id: string;
@@ -357,6 +391,7 @@ export interface PlatformSettings {
   firebaseAppId?: string | null;
   googleMapsApiKey?: string | null;
   firebaseServiceAccountJson?: string | null;
+  defaultLengthUnit: LengthUnitSetting;
   updatedAt: string;
 }
 
@@ -572,7 +607,7 @@ export interface Advisory {
   body: string;
   severity: AdvisorySeverity;
   type: AdvisoryType;
-  expiresAt?: string | null;
+  expiresAt: string;
   createdById: string;
   createdAt: string;
 }
@@ -757,4 +792,125 @@ export interface FeedStockThreshold {
   pelletSizeId: string;
   label: string;
   thresholdKg: number;
+}
+
+// ── IoT monitoring devices ──────────────────────────────────────────────
+// Firmware lives in D:\iot; the wire format these mirror is specified in
+// D:\iot\docs\MQTT.md. Kept hand-synced with the Prisma models, same as
+// every other type in this file — there's no codegen.
+
+// Channel names are the contract with the firmware. Adding one means
+// touching aq_channel_type_t in aq_config.h, the server's schemas/devices.ts
+// and this list, in the same change.
+export type DeviceChannel =
+  | "temperature"
+  | "dissolved_oxygen"
+  | "ph"
+  | "ammonia"
+  | "turbidity"
+  | "tds"
+  | "ec"
+  | "water_level"
+  | "flow";
+
+export type DeviceOutput = "aerator" | "pump" | "valve" | "aux";
+
+export type DeviceStatus = "UNCLAIMED" | "ONLINE" | "OFFLINE";
+
+export type DeviceAlertKind =
+  | "THRESHOLD_BREACH"
+  | "SENSOR_FAULT"
+  | "DEVICE_OFFLINE"
+  | "FAILSAFE_ENGAGED"
+  | "BUFFER_OVERFLOW";
+
+export interface DeviceChannelConfig {
+  type: DeviceChannel;
+  enabled: boolean;
+  pin?: number;
+  aux_pin?: number;
+  // Meaning is per channel type — the layout is documented in
+  // aq_sensors.h. The app only ever writes these through the calibration
+  // wizard, which is why they're an opaque number[] here.
+  cal?: number[];
+}
+
+export interface DeviceThreshold {
+  // null clears a bound; undefined leaves it unchanged. The firmware relies
+  // on that distinction, so the app must preserve it rather than
+  // normalising both to undefined.
+  min?: number | null;
+  max?: number | null;
+  hysteresis?: number;
+  drives?: DeviceOutput | null;
+}
+
+export interface DeviceConfig {
+  sample_interval_s: number;
+  publish_interval_s: number;
+  failsafe_timeout_s: number;
+  channels: DeviceChannelConfig[];
+  thresholds: Partial<Record<DeviceChannel, DeviceThreshold>>;
+}
+
+// Every measurement is nullable. An absent value means "no probe fitted" or
+// "probe faulted" — never zero. Rendering a missing reading as 0 would show
+// a fish kill on a farm that simply hasn't bought that probe.
+export interface DeviceReading {
+  id: string;
+  seq: number;
+  recordedAt: string;
+  receivedAt: string;
+  buffered: boolean;
+  clockUnsynced: boolean;
+  temperatureC?: number | null;
+  dissolvedOxygen?: number | null;
+  ph?: number | null;
+  ammonia?: number | null;
+  turbidityNtu?: number | null;
+  tdsPpm?: number | null;
+  ecUsCm?: number | null;
+  waterLevelM?: number | null;
+  flowLpm?: number | null;
+  outputs?: Partial<Record<DeviceOutput, boolean>> | null;
+  health?: {
+    uptime_s?: number;
+    rssi?: number;
+    free_heap?: number;
+    fw?: string;
+    failsafe?: boolean;
+    buffered?: number;
+    sensor_faults?: DeviceChannel[];
+  } | null;
+}
+
+export interface DeviceAlert {
+  id: string;
+  kind: DeviceAlertKind;
+  channel?: DeviceChannel | null;
+  value?: number | null;
+  message: string;
+  raisedAt: string;
+  clearedAt?: string | null;
+  acknowledgedAt?: string | null;
+}
+
+export interface Device {
+  id: string;
+  deviceId: string;
+  name: string;
+  raceway?: { id: string; name: string } | null;
+  status: DeviceStatus;
+  // Derived server-side from lastSeenAt rather than read off `status`, which
+  // can be stale if a node lost power without a clean disconnect.
+  online: boolean;
+  firmwareVersion?: string | null;
+  lastSeenAt?: string | null;
+  lastRssi?: number | null;
+  config?: DeviceConfig | null;
+  configRev: number;
+  createdAt: string;
+  // Present on the list endpoint only.
+  latestReading?: DeviceReading | null;
+  openAlerts?: number;
 }

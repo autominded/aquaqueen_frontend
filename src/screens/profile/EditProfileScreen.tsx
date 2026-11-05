@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ProfileStackParamList } from "../../navigation/types";
 import { useAuth } from "../../context/AuthContext";
@@ -140,9 +140,12 @@ export function EditProfileScreen({ navigation }: Props) {
 
       <PrimaryButton title="Save" onPress={onSave} loading={loading} style={styles.saveButton} />
 
-      <TouchableOpacity onPress={() => navigation.navigate("ChangePassword")}>
-        <Text style={styles.changePasswordLink}>Change password</Text>
-      </TouchableOpacity>
+      <PrimaryButton
+        title="Change password"
+        variant="secondary"
+        onPress={() => navigation.navigate("ChangePassword")}
+        style={styles.changePasswordButton}
+      />
     </ScrollView>
   );
 }
@@ -151,5 +154,5 @@ const styles = StyleSheet.create({
   container: { padding: 16, backgroundColor: colors.canvas, flexGrow: 1 },
   hint: { fontSize: 12, color: colors.inkMuted, marginTop: -6, marginBottom: 16, lineHeight: 17 },
   saveButton: { marginTop: 4 },
-  changePasswordLink: { textAlign: "center", color: colors.teal, fontSize: 13, fontWeight: "700", marginTop: 20 },
+  changePasswordButton: { marginTop: 12 },
 });

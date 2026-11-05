@@ -3,7 +3,7 @@ import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { BatchesStackParamList } from "../../navigation/types";
-import { completeCleaningTask, createCleaningTask, fetchCleaningTasks, toggleCleaningChecklistItem } from "../../api/tasks";
+import { completeCleaningTask, createCleaningTask, fetchCleaningTasks, reopenCleaningTask, toggleCleaningChecklistItem } from "../../api/tasks";
 import { fetchTeam } from "../../api/users";
 import { fetchFarm } from "../../api/farm";
 import { RecurrenceType } from "../../api/types";
@@ -71,6 +71,11 @@ export function CleaningTasksScreen(_props: Props) {
 
   const completeMutation = useMutation({
     mutationFn: (id: string) => completeCleaningTask(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cleaning-tasks"] }),
+  });
+
+  const reopenMutation = useMutation({
+    mutationFn: (id: string) => reopenCleaningTask(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["cleaning-tasks"] }),
   });
 
@@ -176,8 +181,10 @@ export function CleaningTasksScreen(_props: Props) {
                 ))}
               </View>
             )}
-            {item.status !== "DONE" && (
+            {item.status !== "DONE" ? (
               <PrimaryButton title="Mark done" variant="secondary" onPress={() => completeMutation.mutate(item.id)} loading={completeMutation.isPending} style={styles.completeButton} />
+            ) : (
+              <PrimaryButton title="Reopen" variant="ghost" onPress={() => reopenMutation.mutate(item.id)} loading={reopenMutation.isPending} style={styles.completeButton} />
             )}
           </Card>
         )}

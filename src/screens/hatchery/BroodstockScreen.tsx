@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { HatcheryStackParamList } from "../../navigation/types";
 import { createBroodstock, fetchBroodstocks } from "../../api/broodstock";
-import { fetchFarm } from "../../api/farm";
+import { fetchHatcheryRaceways } from "../../api/hatcheryRaceways";
 import { LoadingView } from "../../components/LoadingView";
 import { ErrorBanner } from "../../components/ErrorBanner";
 import { EmptyState } from "../../components/EmptyState";
@@ -24,8 +24,11 @@ type Props = NativeStackScreenProps<HatcheryStackParamList, "Broodstock">;
 export function BroodstockScreen({ navigation }: Props) {
   const queryClient = useQueryClient();
   const broodstockQuery = useQuery({ queryKey: ["broodstocks"], queryFn: fetchBroodstocks });
-  const farmQuery = useQuery({ queryKey: ["farm"], queryFn: fetchFarm });
-  const raceways = farmQuery.data?.raceways ?? [];
+  // Hatchery raceways only — broodstock lives in the hatchery's own tanks,
+  // not the farm's grow-out raceways, and those are managed on the
+  // Hatchery raceways screen.
+  const racewaysQuery = useQuery({ queryKey: ["hatchery-raceways"], queryFn: fetchHatcheryRaceways });
+  const raceways = racewaysQuery.data ?? [];
   const { refreshing, onRefresh } = useRefreshing();
 
   const [adding, setAdding] = useState(false);
@@ -38,6 +41,9 @@ export function BroodstockScreen({ navigation }: Props) {
     mutationFn: () => createBroodstock({ racewayId: racewayId!, species: species.trim(), count: Number(count), stockedDate }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["broodstocks"] });
+      // The raceways screen shows what each one currently houses, so it
+      // goes stale the moment broodstock is added to one.
+      queryClient.invalidateQueries({ queryKey: ["hatchery-raceways"] });
       setAdding(false);
       setRacewayId(undefined);
       setSpecies("");
@@ -58,9 +64,16 @@ export function BroodstockScreen({ navigation }: Props) {
             label="Raceway"
             value={racewayId ?? null}
             onSelect={setRacewayId}
-            placeholder="Select a raceway"
+            // An empty picker here means no hatchery raceway exists yet,
+            // which is a different problem from "you haven't picked one".
+            placeholder={raceways.length === 0 ? "No hatchery raceways yet" : "Select a raceway"}
             options={raceways.map((r) => ({ value: r.id, label: r.name }))}
           />
+          {raceways.length === 0 && (
+            <TouchableOpacity onPress={() => navigation.navigate("HatcheryRaceways")}>
+              <Text style={styles.addLink}>+ Add a hatchery raceway first</Text>
+            </TouchableOpacity>
+          )}
           <FormField label="Species" value={species} onChangeText={setSpecies} placeholder="Rainbow Trout" />
           <FormField label="Count" value={count} onChangeText={setCount} keyboardType="numeric" placeholder="40" />
           <DateField label="Stocked date" value={stockedDate} onChange={setStockedDate} />

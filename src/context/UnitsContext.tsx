@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
 import * as SecureStore from "expo-secure-store";
+import { fetchPublicConfig } from "../api/publicConfig";
 
 // SecureStore has no web implementation — mirrors the Platform.OS branch in
 // api/client.ts's own token storage helpers.
@@ -11,8 +12,16 @@ const storage = {
 };
 
 export type MassUnit = "kg" | "lb";
-export type LengthUnit = "m" | "ft";
+// Centimetres exist for hatchery troughs, which are small enough that
+// metres read awkwardly (0.4 m rather than 40 cm).
+export type LengthUnit = "m" | "cm" | "ft";
 export type WeightUnit = "g" | "oz";
+
+// How many display units make up one stored metre. Dimensions are always
+// persisted in metres (Raceway.lengthM etc.) — this is presentation only.
+export const LENGTH_PER_METRE: Record<LengthUnit, number> = { m: 1, cm: 100, ft: 3.28084 };
+
+const isLengthUnit = (value: string | null): value is LengthUnit => value === "m" || value === "cm" || value === "ft";
 
 interface UnitsContextValue {
   massUnit: MassUnit;
@@ -53,6 +62,20 @@ const LEGACY_SYSTEM_KEY = "aquaqueen.unit-system";
 
 const UnitsContext = createContext<UnitsContextValue | null>(null);
 
+const PLATFORM_UNIT_TO_LENGTH: Record<string, LengthUnit> = { METRE: "m", CENTIMETRE: "cm", FOOT: "ft" };
+
+// Best-effort: the app has to stay usable offline or with the API down, so a
+// failure here just leaves the built-in default in place rather than
+// blocking startup on a preference.
+async function fetchPlatformLengthUnit(): Promise<LengthUnit | null> {
+  try {
+    const config = await fetchPublicConfig();
+    return PLATFORM_UNIT_TO_LENGTH[config.defaultLengthUnit ?? ""] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function UnitsProvider({ children }: { children: React.ReactNode }) {
   const [massUnit, setMassUnitState] = useState<MassUnit>("kg");
   const [lengthUnit, setLengthUnitState] = useState<LengthUnit>("ft");
@@ -72,8 +95,14 @@ export function UnitsProvider({ children }: { children: React.ReactNode }) {
       if (savedMass === "kg" || savedMass === "lb") setMassUnitState(savedMass);
       else if (legacyImperial) setMassUnitState("lb");
 
-      if (savedLength === "m" || savedLength === "ft") setLengthUnitState(savedLength);
+      // A saved device preference always wins; the platform default only
+      // decides what a device that has never chosen one starts on.
+      if (isLengthUnit(savedLength)) setLengthUnitState(savedLength);
       else if (legacyImperial) setLengthUnitState("ft");
+      else {
+        const platformDefault = await fetchPlatformLengthUnit();
+        if (platformDefault) setLengthUnitState(platformDefault);
+      }
 
       if (savedWeight === "g" || savedWeight === "oz") setWeightUnitState(savedWeight);
       else if (legacyImperial) setWeightUnitState("oz");
@@ -84,7 +113,7 @@ export function UnitsProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo<UnitsContextValue>(() => {
     const isMassLb = massUnit === "lb";
-    const isLengthFt = lengthUnit === "ft";
+    const lengthFactor = LENGTH_PER_METRE[lengthUnit];
     const isWeightOz = weightUnit === "oz";
     return {
       massUnit,
@@ -102,18 +131,21 @@ export function UnitsProvider({ children }: { children: React.ReactNode }) {
         return `${value.toLocaleString(undefined, { maximumFractionDigits })} ${massUnit}`;
       },
       formatLength: (metres, maximumFractionDigits = 1) => {
-        const value = isLengthFt ? metres * 3.28084 : metres;
-        return `${value.toLocaleString(undefined, { maximumFractionDigits })} ${lengthUnit}`;
+        const value = metres * lengthFactor;
+        // Centimetres are whole numbers in practice (300 cm, not 300.0),
+        // so the default precision drops to none unless a caller asks.
+        const digits = lengthUnit === "cm" ? 0 : maximumFractionDigits;
+        return `${value.toLocaleString(undefined, { maximumFractionDigits: digits })} ${lengthUnit}`;
       },
       formatWeight: (grams, maximumFractionDigits = 1) => {
         const value = isWeightOz ? grams * 0.035274 : grams;
         return `${value.toLocaleString(undefined, { maximumFractionDigits })} ${weightUnit}`;
       },
       toDisplayMass: (kilograms) => (isMassLb ? kilograms * 2.20462 : kilograms),
-      toDisplayLength: (metres) => (isLengthFt ? metres * 3.28084 : metres),
+      toDisplayLength: (metres) => metres * lengthFactor,
       toDisplayWeight: (grams) => (isWeightOz ? grams * 0.035274 : grams),
       fromDisplayMass: (displayValue) => (isMassLb ? displayValue / 2.20462 : displayValue),
-      fromDisplayLength: (displayValue) => (isLengthFt ? displayValue / 3.28084 : displayValue),
+      fromDisplayLength: (displayValue) => displayValue / lengthFactor,
       fromDisplayWeight: (displayValue) => (isWeightOz ? displayValue / 0.035274 : displayValue),
     };
   }, [isLoading, massUnit, lengthUnit, weightUnit]);

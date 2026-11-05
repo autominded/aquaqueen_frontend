@@ -122,7 +122,12 @@ export function BatchDetailsScreen({ route, navigation }: Props) {
             <Text style={styles.statLabel}>Avg weight</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={styles.statValue}>{latestWaterQuality ? `${latestWaterQuality.temperatureC}°C` : "—"}</Text>
+            {/* Guards the field, not just the row: a reading rolled up from a
+                device that has no temperature probe fitted has a null here,
+                and interpolating it would render "null°C". */}
+            <Text style={styles.statValue}>
+              {typeof latestWaterQuality?.temperatureC === "number" ? `${latestWaterQuality.temperatureC}°C` : "—"}
+            </Text>
             <Text style={styles.statLabel}>Water temp</Text>
           </View>
         </View>

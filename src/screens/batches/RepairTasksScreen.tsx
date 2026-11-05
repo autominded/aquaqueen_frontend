@@ -3,7 +3,7 @@ import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { BatchesStackParamList } from "../../navigation/types";
-import { completeRepairTask, createRepairTask, fetchRepairTasks } from "../../api/tasks";
+import { completeRepairTask, createRepairTask, fetchRepairTasks, reopenRepairTask } from "../../api/tasks";
 import { fetchTeam } from "../../api/users";
 import { fetchFarm } from "../../api/farm";
 import { RepairPriority } from "../../api/types";
@@ -69,6 +69,11 @@ export function RepairTasksScreen(_props: Props) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["repair-tasks"] }),
   });
 
+  const reopenMutation = useMutation({
+    mutationFn: (id: string) => reopenRepairTask(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["repair-tasks"] }),
+  });
+
   const canSubmit = title.trim().length > 0;
   const racewayOptions = (farmQuery.data?.raceways ?? []).map((r) => ({ label: r.name, value: r.id }));
 
@@ -131,8 +136,10 @@ export function RepairTasksScreen(_props: Props) {
               {item.assignedTo ? ` · ${item.assignedTo.name}` : ""}
             </Text>
             {item.description && <Text style={styles.meta}>{item.description}</Text>}
-            {item.status !== "DONE" && (
+            {item.status !== "DONE" ? (
               <PrimaryButton title="Mark done" variant="secondary" onPress={() => completeMutation.mutate(item.id)} loading={completeMutation.isPending} style={styles.completeButton} />
+            ) : (
+              <PrimaryButton title="Reopen" variant="ghost" onPress={() => reopenMutation.mutate(item.id)} loading={reopenMutation.isPending} style={styles.completeButton} />
             )}
           </Card>
         )}

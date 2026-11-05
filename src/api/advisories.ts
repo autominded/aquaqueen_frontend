@@ -17,6 +17,12 @@ export function fetchAllAdvisories() {
   return apiClient.get<{ advisories: AdminAdvisory[] }>("/admin/advisories").then((r) => r.data.advisories);
 }
 
-export function createAdvisory(input: { title: string; body: string; severity: AdvisorySeverity; type: AdvisoryType; expiresAt?: string }) {
+export function createAdvisory(input: {
+  title: string;
+  body: string;
+  severity: AdvisorySeverity;
+  type: AdvisoryType;
+  expiresInDays: number;
+}) {
   return apiClient.post<{ advisory: AdminAdvisory }>("/admin/advisories", input).then((r) => r.data.advisory);
 }
