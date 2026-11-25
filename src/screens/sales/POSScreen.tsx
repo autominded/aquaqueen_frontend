@@ -255,7 +255,7 @@ export function POSScreen({ route, navigation }: Props) {
       queryClient.invalidateQueries({ queryKey: ["raceway-operations"] });
       confirmAction(
         { title: "Sale complete", message: `₹${sale.totalAmount.toFixed(2)} — print a receipt?`, confirmLabel: "Print receipt" },
-        () => printReceipt(sale, farmQuery.data ?? null, user?.organizationName ?? "AquaQueen")
+        () => printReceipt(sale, farmQuery.data ?? null, user?.organizationName ?? "FarmFin")
       );
     },
   });

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "AquaQueen",
-    "slug": "aquaqueen",
+    "name": "FarmFin",
+    "slug": "farmfin",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -31,19 +31,19 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow AquaQueen to use your location to tag your farm's location."
+          "locationWhenInUsePermission": "Allow FarmFin to use your location to tag your farm's location."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow AquaQueen to access your photos to set a farm photo."
+          "photosPermission": "Allow FarmFin to access your photos to set a farm photo."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow AquaQueen to use the camera to scan the setup code on a monitoring device.",
+          "cameraPermission": "Allow FarmFin to use the camera to scan the setup code on a monitoring device.",
           "recordAudioAndroid": false,
           "barcodeScannerEnabled": true
         }
@@ -52,8 +52,8 @@
         "@orbital-systems/react-native-esp-idf-provisioning",
         {
           "transport": "ble",
-          "bluetoothAlwaysPermission": "Allow AquaQueen to use Bluetooth to set up a new monitoring device.",
-          "locationWhenInUsePermission": "Android requires location access for any Bluetooth scan. AquaQueen only uses it to find nearby monitoring devices, never to track you."
+          "bluetoothAlwaysPermission": "Allow FarmFin to use Bluetooth to set up a new monitoring device.",
+          "locationWhenInUsePermission": "Android requires location access for any Bluetooth scan. FarmFin only uses it to find nearby monitoring devices, never to track you."
         }
       ],
       "expo-sharing",

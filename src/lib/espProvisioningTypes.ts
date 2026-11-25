@@ -61,7 +61,7 @@ export const FAILURE_COPY: Record<ProvisioningFailure, { title: string; detail: 
   permissionDenied: {
     title: "Permission needed",
     detail:
-      "AquaQueen needs Bluetooth and location permission to find nearby devices. Android requires location access for any Bluetooth scan — it isn't used to track you.",
+      "FarmFin needs Bluetooth and location permission to find nearby devices. Android requires location access for any Bluetooth scan — it isn't used to track you.",
   },
   deviceNotFound: {
     title: "Can't find that device",
@@ -83,11 +83,11 @@ export const FAILURE_COPY: Record<ProvisioningFailure, { title: string; detail: 
   networkNotFound: {
     title: "The device can't see that network",
     detail:
-      "AquaQueen devices only work on 2.4 GHz Wi-Fi. If your router has separate 2.4 and 5 GHz networks, pick the 2.4 GHz one — your phone may be on the 5 GHz half.",
+      "FarmFin devices only work on 2.4 GHz Wi-Fi. If your router has separate 2.4 and 5 GHz networks, pick the 2.4 GHz one — your phone may be on the 5 GHz half.",
   },
   unsupportedPlatform: {
     title: "Use the phone app",
-    detail: "Setting up a new device needs Bluetooth, which browsers can't reach. Open AquaQueen on your phone to add it.",
+    detail: "Setting up a new device needs Bluetooth, which browsers can't reach. Open FarmFin on your phone to add it.",
   },
   unknown: {
     title: "Setup didn't finish",

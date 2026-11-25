@@ -564,7 +564,7 @@ function NetworkStep({
           device can never join.
         */}
         <Text style={styles.stepBody}>
-          These are the networks the device can reach. AquaQueen devices only work on 2.4 GHz Wi-Fi, so your
+          These are the networks the device can reach. FarmFin devices only work on 2.4 GHz Wi-Fi, so your
           5 GHz network won't appear here even if your phone is on it.
         </Text>
       </Card>
@@ -662,7 +662,7 @@ function AssignStep({
       </View>
       <Text style={styles.stepTitle}>Device connected</Text>
       <Text style={styles.stepBody}>
-        Give it a name and tell AquaQueen which raceway it's watching. You can change both later.
+        Give it a name and tell FarmFin which raceway it's watching. You can change both later.
       </Text>
 
       <FormField label="Name" value={name} onChangeText={setName} placeholder={device.name} />

@@ -71,7 +71,7 @@ export function LoginScreen({ navigation }: Props) {
             <Text style={styles.forgotLink}>Forgot password?</Text>
           </TouchableOpacity>
 
-          <View style={styles.footer}><Text style={styles.footerText}>New to AquaQueen?</Text><PrimaryButton title="Sign up" variant="secondary" onPress={() => navigation.navigate("Signup")} /></View>
+          <View style={styles.footer}><Text style={styles.footerText}>New to FarmFin?</Text><PrimaryButton title="Sign up" variant="secondary" onPress={() => navigation.navigate("Signup")} /></View>
         </AuthShell>
       </ScrollView>
     </KeyboardAvoidingView>

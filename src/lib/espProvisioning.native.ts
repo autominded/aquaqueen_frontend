@@ -11,7 +11,7 @@ import { ProvisioningError, WifiNetwork } from "./espProvisioningTypes";
 export * from "./espProvisioningTypes";
 
 /**
- * BLE provisioning against the AquaQueen node firmware (D:\iot).
+ * BLE provisioning against the FarmFin node firmware (D:\iot).
  *
  * The firmware advertises as `AQ_<last-6-of-MAC>` using ESP-IDF's
  * WIFI_PROV_SECURITY_1, which is `ESPSecurity.secure` here, and takes the
@@ -129,8 +129,8 @@ export async function findDevice(deviceId: string): Promise<string> {
     throw new ProvisioningError(
       "deviceNotFound",
       devices.length
-        ? `Found ${devices.length} AquaQueen device(s) nearby, but not ${expectedName}.`
-        : "No AquaQueen devices are advertising nearby."
+        ? `Found ${devices.length} FarmFin device(s) nearby, but not ${expectedName}.`
+        : "No FarmFin devices are advertising nearby."
     );
   }
   return match.name;

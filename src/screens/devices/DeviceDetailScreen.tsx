@@ -171,7 +171,7 @@ export function DeviceDetailScreen({ route, navigation }: Props) {
           <View style={styles.failsafeCopy}>
             <Text style={styles.failsafeTitle}>Running in failsafe</Text>
             <Text style={styles.failsafeBody}>
-              This device lost contact with AquaQueen and switched to its safe settings — aerator on,
+              This device lost contact with FarmFin and switched to its safe settings — aerator on,
               valve closed. It's still protecting the fish, but the readings below may be out of date.
             </Text>
           </View>

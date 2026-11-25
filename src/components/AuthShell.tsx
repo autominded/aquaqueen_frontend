@@ -8,7 +8,7 @@ export function AuthShell({ eyebrow, title, subtitle, children }: { eyebrow: str
     <View style={styles.screen}>
       <View style={styles.hero}>
         <View style={styles.logo}><AppIcon name="activity" size={24} color={colors.white} /></View>
-        <Text style={styles.brand}>AquaQueen</Text>
+        <Text style={styles.brand}>FarmFin</Text>
         <Text style={styles.eyebrow}>{eyebrow}</Text>
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.subtitle}>{subtitle}</Text>

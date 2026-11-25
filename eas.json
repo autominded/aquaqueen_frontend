@@ -14,13 +14,13 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://REPLACE-WITH-YOUR-STAGING-API.onrender.com/api"
+        "EXPO_PUBLIC_API_URL": "https://api.farmfin.in/api"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://REPLACE-WITH-YOUR-PRODUCTION-API.onrender.com/api"
+        "EXPO_PUBLIC_API_URL": "https://api.farmfin.in/api"
       }
     }
   },

@@ -61,7 +61,7 @@ export function SalesHistoryScreen({ navigation }: Props) {
 
   const print = async (sale: Sale) => {
     try {
-      await printReceipt(sale, farmQuery.data ?? null, user?.organizationName ?? "AquaQueen");
+      await printReceipt(sale, farmQuery.data ?? null, user?.organizationName ?? "FarmFin");
     } catch (err) {
       notify("Couldn't print receipt", apiErrorMessage(err));
     }

@@ -74,7 +74,7 @@ export function DashboardScreen({ navigation }: Props) {
       {needsFarmSetup && (
         <View style={styles.welcomeCard}>
           <AppIcon name="map" size={26} color="#D5E8E5" />
-          <Text style={styles.welcomeTitle}>{justSignedUp ? "Welcome to AquaQueen!" : "Set up your farm"}</Text>
+          <Text style={styles.welcomeTitle}>{justSignedUp ? "Welcome to FarmFin!" : "Set up your farm"}</Text>
           <Text style={styles.welcomeText}>
             {canManageFarm
               ? "Add your raceways, location and photo to unlock production tracking, batches and harvest planning."

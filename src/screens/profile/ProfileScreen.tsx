@@ -26,7 +26,7 @@ const MENU: {
   { key: "Team", title: "Team", subtitle: "See who has access and add new members", permission: "users.manage" },
   { key: "Roles", title: "Roles", subtitle: "Manage what each role can do", permission: "roles.manage" },
   { key: "MarketplaceHome", title: "Marketplace", subtitle: "Buy and sell equipment, livestock, feed & supplies" },
-  { key: "IndustryUpdates", title: "Industry updates", subtitle: "News and updates from AquaQueen" },
+  { key: "IndustryUpdates", title: "Industry updates", subtitle: "News and updates from FarmFin" },
   { key: "AdminUsers", title: "Admin", subtitle: "Every user across every farm", superAdminOnly: true },
   { key: "AdminOrganizations", title: "Organizations", subtitle: "Lock, resume or remove a farm's access", superAdminOnly: true },
   { key: "AdminAdvisories", title: "Advisories", subtitle: "Push weather, temperature or news alerts to every user", superAdminOnly: true },

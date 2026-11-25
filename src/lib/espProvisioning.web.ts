@@ -11,7 +11,7 @@ export * from "./espProvisioningTypes";
  * hit the web build — doesn't implement Web Bluetooth at all.
  *
  * So rather than half-build it, every entry point fails with
- * `unsupportedPlatform`, and the UI turns that into "open AquaQueen on your
+ * `unsupportedPlatform`, and the UI turns that into "open FarmFin on your
  * phone to add a device". Everything *else* about devices — the list, live
  * readings, alerts, thresholds, calibration, relay control — works fine on
  * web, because all of it goes through the API rather than Bluetooth.

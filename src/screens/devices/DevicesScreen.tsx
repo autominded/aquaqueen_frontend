@@ -76,7 +76,7 @@ export function DevicesScreen({ navigation }: Props) {
           </View>
           <Text style={styles.emptyTitle}>No monitoring devices yet</Text>
           <Text style={styles.emptyBody}>
-            An AquaQueen device sits on a raceway and reads its water around the clock — oxygen,
+            An FarmFin device sits on a raceway and reads its water around the clock — oxygen,
             temperature, level — and switches the aerator on by itself when oxygen drops, even if the
             internet is down.
           </Text>

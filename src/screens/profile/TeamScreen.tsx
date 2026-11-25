@@ -115,7 +115,7 @@ export function TeamScreen({ navigation }: Props) {
                         confirmAction(
                           {
                             title: "Deactivate this member?",
-                            message: `${item.name} will immediately lose access to ${item.role.name === "Owner" ? "the farm" : "AquaQueen"} — any active session ends right away, and they can't log back in until reactivated. Their past activity stays on record.`,
+                            message: `${item.name} will immediately lose access to ${item.role.name === "Owner" ? "the farm" : "FarmFin"} — any active session ends right away, and they can't log back in until reactivated. Their past activity stays on record.`,
                             confirmLabel: "Deactivate",
                             destructive: true,
                           },
